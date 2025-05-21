@@ -10,6 +10,8 @@ import Bookings from "@/pages/bookings";
 import BookingDetails from "@/pages/booking-details";
 import Fleet from "@/pages/fleet";
 import Customers from "@/pages/customers";
+import Reports from "@/pages/reports";
+import Settings from "@/pages/settings";
 
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -71,6 +73,16 @@ function Router() {
       <Route path="/customers" component={() => (
         <AppLayout>
           <Customers />
+        </AppLayout>
+      )} />
+      <Route path="/reports" component={() => (
+        <AppLayout>
+          <Reports />
+        </AppLayout>
+      )} />
+      <Route path="/settings" component={() => (
+        <AppLayout>
+          <Settings />
         </AppLayout>
       )} />
       {/* Fallback to 404 */}

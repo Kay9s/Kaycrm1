@@ -15,10 +15,10 @@ const NavLink = ({ href, icon, label, active }: NavLinkProps) => {
   
   return (
     <Link href={href}>
-      <a className={cn(baseClasses, active ? activeClasses : inactiveClasses)}>
+      <div className={cn(baseClasses, active ? activeClasses : inactiveClasses)}>
         <i className={`${icon} mr-3`}></i>
         <span>{label}</span>
-      </a>
+      </div>
     </Link>
   );
 };

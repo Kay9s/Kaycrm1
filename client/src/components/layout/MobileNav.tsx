@@ -11,13 +11,13 @@ type NavItemProps = {
 const NavItem = ({ href, icon, label, active }: NavItemProps) => {
   return (
     <Link href={href}>
-      <a className={cn(
+      <div className={cn(
         "flex flex-col items-center p-2", 
         active ? "text-primary" : "text-neutral-600 dark:text-neutral-400"
       )}>
         <i className={`${icon} text-xl`}></i>
         <span className="text-xs mt-1">{label}</span>
-      </a>
+      </div>
     </Link>
   );
 };
