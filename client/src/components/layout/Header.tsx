@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon } from "lucide-react";
+import { MoonIcon, SunIcon, Search, Menu, Bell, ChevronDown } from "lucide-react";
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -12,38 +12,36 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-10">
-      <div className="container mx-auto">
-        <div className="flex items-center justify-between h-16 px-4">
-          {/* Mobile Logo & Menu Button */}
+    <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-10 h-16 shadow-sm">
+      <div className="h-full px-4 md:px-6">
+        <div className="flex items-center justify-between h-full">
+          {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
-            <button id="menu-toggle" className="text-neutral-600 dark:text-neutral-300 mr-2">
-              <i className="ri-menu-line text-xl"></i>
+            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <Menu className="h-5 w-5 text-gray-700 dark:text-gray-300" />
             </button>
-            <h1 className="text-xl font-semibold text-primary">
-              <i className="ri-car-line mr-1"></i> CarFlow
-            </h1>
           </div>
           
           {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-6">
+          <div className="hidden md:flex flex-1 max-w-xl">
             <div className="relative w-full">
-              <i className="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input 
                 type="search" 
-                placeholder="Search bookings, customers, vehicles..." 
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Search..." 
+                className="w-full h-9 pl-9 pr-4 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
           {/* Header Actions */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-1">
+            {/* Theme Toggle */}
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={toggleTheme} 
-              className="mr-2" 
+              className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" 
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -53,38 +51,52 @@ export default function Header() {
               )}
             </Button>
             
-            <button className="relative p-2 text-neutral-600 dark:text-neutral-300 hover:text-primary dark:hover:text-primary" aria-label="Notifications">
-              <i className="ri-notification-3-line text-xl"></i>
-              <span className="absolute top-1 right-1 w-4 h-4 bg-destructive rounded-full text-white text-xs flex items-center justify-center">3</span>
-            </button>
-            
-            <button 
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-primary dark:hover:text-primary md:hidden" 
-              aria-label="Search"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+            {/* Notifications */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Notifications"
             >
-              <i className="ri-search-line text-xl"></i>
-            </button>
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-semibold">3</span>
+            </Button>
             
-            <div className="hidden md:flex items-center ml-4">
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
-                <span className="text-sm font-medium">JD</span>
+            {/* Mobile Search Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            
+            {/* User Profile */}
+            <div className="hidden md:flex items-center ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
+              <div className="flex items-center">
+                <img 
+                  src="https://ui-avatars.com/api/?name=John+Doe&background=4448c5&color=fff" 
+                  alt="John Doe" 
+                  className="w-8 h-8 rounded-full"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">John Doe</span>
+                <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
               </div>
-              <span className="ml-2 text-sm font-medium hidden md:inline">John Doe</span>
-              <i className="ri-arrow-down-s-line ml-1 text-neutral-400"></i>
             </div>
           </div>
         </div>
         
         {/* Mobile Search (conditionally rendered) */}
         {isSearchOpen && (
-          <div className="p-3 border-t border-neutral-200 dark:border-neutral-700 md:hidden">
+          <div className="p-3 border-t border-gray-200 dark:border-gray-700 md:hidden absolute left-0 right-0 bg-white dark:bg-gray-900">
             <div className="relative w-full">
-              <i className="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input 
                 type="search" 
                 placeholder="Search..." 
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full h-9 pl-9 pr-4 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 autoFocus
               />
             </div>

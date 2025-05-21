@@ -9,15 +9,16 @@ type NavLinkProps = {
 };
 
 const NavLink = ({ href, icon, label, active }: NavLinkProps) => {
-  const baseClasses = "flex items-center p-2 rounded-md transition-colors";
-  const activeClasses = "bg-primary bg-opacity-10 text-primary dark:bg-primary/20";
-  const inactiveClasses = "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-primary dark:hover:text-primary";
+  const baseClasses = "flex items-center p-2.5 rounded transition-colors my-1";
+  const activeClasses = "bg-[#4448c5] text-white font-medium";
+  const inactiveClasses = "hover:bg-[#182456] text-white hover:text-white";
   
   return (
     <Link href={href}>
       <div className={cn(baseClasses, active ? activeClasses : inactiveClasses)}>
-        <i className={`${icon} mr-3`}></i>
+        <i className={`${icon} mr-3 text-lg`}></i>
         <span>{label}</span>
+        {active && <div className="ml-auto w-1.5 h-5 bg-white rounded-full"></div>}
       </div>
     </Link>
   );
@@ -27,22 +28,42 @@ export default function Sidebar() {
   const [location] = useLocation();
   
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 h-screen sticky top-0">
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-        <h1 className="text-xl font-semibold text-primary flex items-center">
-          <i className="ri-car-line mr-2"></i> CarFlow
+    <aside className="hidden md:flex flex-col w-64 bg-[#1e2c6b] text-white h-screen sticky top-0 shadow-lg">
+      <div className="p-4 border-b border-[#2a3880] flex items-center">
+        <h1 className="text-xl font-bold flex items-center">
+          <i className="ri-car-line mr-2 text-[#4448c5]"></i> 
+          <span className="text-white">CarFlow</span>
         </h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Rental Management System</p>
       </div>
       
-      <nav className="flex-grow p-4">
-        <ul className="space-y-2">
+      <div className="p-3 mb-2">
+        <h2 className="px-3 py-2 text-xs uppercase tracking-wider text-gray-400 font-semibold">APPLICATION</h2>
+      </div>
+      
+      <nav className="flex-grow px-3">
+        <ul className="space-y-0.5">
           <li>
             <NavLink 
               href="/" 
               icon="ri-dashboard-line" 
               label="Dashboard" 
               active={location === "/"} 
+            />
+          </li>
+          <li>
+            <NavLink 
+              href="/customers" 
+              icon="ri-user-line" 
+              label="Customer" 
+              active={location === "/customers"} 
+            />
+          </li>
+          <li>
+            <NavLink 
+              href="/fleet" 
+              icon="ri-car-line" 
+              label="Vehicle" 
+              active={location === "/fleet"} 
             />
           </li>
           <li>
@@ -55,28 +76,18 @@ export default function Sidebar() {
           </li>
           <li>
             <NavLink 
-              href="/fleet" 
-              icon="ri-car-line" 
-              label="Fleet" 
-              active={location === "/fleet"} 
-            />
-          </li>
-          <li>
-            <NavLink 
-              href="/customers" 
-              icon="ri-user-line" 
-              label="Customers" 
-              active={location === "/customers"} 
-            />
-          </li>
-          <li>
-            <NavLink 
               href="/reports" 
               icon="ri-bar-chart-line" 
               label="Reports" 
               active={location === "/reports"} 
             />
           </li>
+        </ul>
+      </nav>
+      
+      <div className="p-3 mt-2">
+        <h2 className="px-3 py-2 text-xs uppercase tracking-wider text-gray-400 font-semibold">PAGES</h2>
+        <ul className="space-y-0.5">
           <li>
             <NavLink 
               href="/settings" 
@@ -86,20 +97,16 @@ export default function Sidebar() {
             />
           </li>
         </ul>
-      </nav>
+      </div>
       
-      <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-        <a href="#" className="flex items-center p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:text-primary dark:hover:text-primary transition-colors">
-          <i className="ri-question-line mr-3"></i>
-          <span>Help & Support</span>
-        </a>
-        <div className="flex items-center mt-4 p-2">
-          <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+      <div className="p-4 mt-auto border-t border-[#2a3880]">
+        <div className="flex items-center p-2">
+          <div className="w-10 h-10 rounded-full bg-[#4448c5] text-white flex items-center justify-center">
             <span className="text-sm font-medium">JD</span>
           </div>
-          <div className="ml-2">
-            <p className="text-sm font-medium">John Doe</p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">Administrator</p>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-white">John Doe</p>
+            <p className="text-xs text-gray-400">Administrator</p>
           </div>
         </div>
       </div>
