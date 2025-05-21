@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 type ActionButton = {
   icon: string;
   label: string;
-  onClick: () => void;
+  path?: string;
+  onClick?: () => void;
 };
 
 export default function QuickActions() {
@@ -11,22 +14,22 @@ export default function QuickActions() {
     {
       icon: "ri-car-line",
       label: "Add Car",
-      onClick: () => console.log("Add car clicked")
+      path: "/fleet"
     },
     {
       icon: "ri-user-add-line",
       label: "Add Customer",
-      onClick: () => console.log("Add customer clicked")
+      path: "/customers"
     },
     {
       icon: "ri-file-list-3-line",
       label: "New Report",
-      onClick: () => console.log("New report clicked")
+      path: "/reports"
     },
     {
       icon: "ri-settings-line",
       label: "Settings",
-      onClick: () => console.log("Settings clicked")
+      path: "/settings"
     }
   ];
 
@@ -38,14 +41,15 @@ export default function QuickActions() {
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
           {actions.map((action, index) => (
-            <button 
-              key={index}
-              className="flex flex-col items-center justify-center p-3 border border-neutral-200 dark:border-neutral-700 rounded-md hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
-              onClick={action.onClick}
-            >
-              <i className={`${action.icon} text-primary text-xl mb-2`}></i>
-              <span className="text-sm text-neutral-700 dark:text-neutral-300">{action.label}</span>
-            </button>
+            <Link key={index} href={action.path || "#"}>
+              <Button 
+                variant="outline" 
+                className="w-full h-auto flex flex-col items-center justify-center p-3 hover:bg-primary/5 dark:hover:bg-primary/10"
+              >
+                <i className={`${action.icon} text-primary text-xl mb-2`}></i>
+                <span className="text-sm text-neutral-700 dark:text-neutral-300">{action.label}</span>
+              </Button>
+            </Link>
           ))}
         </div>
       </CardContent>

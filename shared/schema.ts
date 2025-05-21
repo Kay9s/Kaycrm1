@@ -116,6 +116,9 @@ export type SupportTicket = typeof supportTickets.$inferSelect;
 export const bookingFormSchema = insertBookingSchema.extend({
   customerName: z.string().min(1, "Customer name is required"),
   vehicleName: z.string().min(1, "Vehicle is required"),
+  // Use special handling for dates to make them compatible with form and API
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
 });
 
 export const supportTicketFormSchema = insertSupportTicketSchema.extend({

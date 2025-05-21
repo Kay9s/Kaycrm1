@@ -12,13 +12,25 @@ type BookingWithDetails = Booking & {
 };
 
 function StatusBadge({ status }: { status: string }) {
+  // Define text colors that match the background properly
+  const getTextColorClass = (status: string) => {
+    switch(status) {
+      case "active": return "text-green-700 dark:text-green-400";
+      case "pending": return "text-amber-700 dark:text-amber-400";
+      case "completed": return "text-neutral-700 dark:text-neutral-300";
+      case "cancelled": return "text-red-700 dark:text-red-400";
+      default: return "text-neutral-700 dark:text-neutral-300";
+    }
+  };
+  
   return (
     <span className={cn(
-      "px-2 py-1 text-xs rounded-full",
-      status === "active" && "bg-success bg-opacity-10 text-success",
-      status === "pending" && "bg-warning bg-opacity-10 text-warning",
-      status === "completed" && "bg-neutral-200 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300",
-      status === "cancelled" && "bg-destructive bg-opacity-10 text-destructive",
+      "px-2 py-1 text-xs rounded-full flex items-center justify-center",
+      status === "active" && "bg-green-100 dark:bg-green-900/30",
+      status === "pending" && "bg-amber-100 dark:bg-amber-900/30",
+      status === "completed" && "bg-neutral-100 dark:bg-neutral-800/50",
+      status === "cancelled" && "bg-red-100 dark:bg-red-900/30",
+      getTextColorClass(status)
     )}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>

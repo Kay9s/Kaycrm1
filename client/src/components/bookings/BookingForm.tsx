@@ -82,7 +82,14 @@ export default function BookingForm() {
       // Remove the extra fields we added for the form
       const { customerName, vehicleName, ...bookingData } = data;
       
-      return apiRequest('POST', '/api/bookings', bookingData);
+      // Format dates as strings for API
+      const formattedData = {
+        ...bookingData,
+        startDate: bookingData.startDate.toISOString().split('T')[0],
+        endDate: bookingData.endDate.toISOString().split('T')[0]
+      };
+      
+      return apiRequest('POST', '/api/bookings', formattedData);
     },
     onSuccess: () => {
       toast({
