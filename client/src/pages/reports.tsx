@@ -166,7 +166,7 @@ export default function Reports() {
                       <YAxis />
                       <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
                       <Legend />
-                      <Bar dataKey="amount" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="amount" fill={CHART_COLORS.SECONDARY} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
