@@ -1,0 +1,123 @@
+import { pgTable, text, serial, integer, boolean, timestamp, date, json } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default("user"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Vehicles
+export const vehicles = pgTable("vehicles", {
+  id: serial("id").primaryKey(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  year: integer("year").notNull(),
+  licensePlate: text("license_plate").notNull().unique(),
+  category: text("category").notNull(),
+  status: text("status").notNull().default("available"),
+  maintenanceStatus: text("maintenance_status").default("ok"),
+  imageUrl: text("image_url"),
+  dailyRate: integer("daily_rate").notNull(),
+});
+
+export const insertVehicleSchema = createInsertSchema(vehicles).omit({
+  id: true,
+});
+
+// Customers
+export const customers = pgTable("customers", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull(),
+  address: text("address"),
+  driverLicense: text("driver_license").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCustomerSchema = createInsertSchema(customers).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Bookings
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  bookingRef: text("booking_ref").notNull().unique(),
+  customerId: integer("customer_id").notNull(),
+  vehicleId: integer("vehicle_id").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  status: text("status").notNull().default("pending"),
+  totalAmount: integer("total_amount").notNull(),
+  paymentStatus: text("payment_status").notNull().default("pending"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  source: text("source").default("direct"),
+  googleCalendarEventId: text("google_calendar_event_id"),
+  n8nWebhookData: json("n8n_webhook_data"),
+});
+
+export const insertBookingSchema = createInsertSchema(bookings).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Emergency Support Tickets
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id"),
+  customerId: integer("customer_id").notNull(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("open"),
+  priority: text("priority").notNull().default("medium"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  assignedTo: integer("assigned_to"),
+});
+
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
+// Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
+export type Vehicle = typeof vehicles.$inferSelect;
+
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type Customer = typeof customers.$inferSelect;
+
+export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type Booking = typeof bookings.$inferSelect;
+
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+
+// Extended schemas for frontend validation
+export const bookingFormSchema = insertBookingSchema.extend({
+  customerName: z.string().min(1, "Customer name is required"),
+  vehicleName: z.string().min(1, "Vehicle is required"),
+});
+
+export const supportTicketFormSchema = insertSupportTicketSchema.extend({
+  customerName: z.string().min(1, "Customer name is required"),
+});
