@@ -204,7 +204,7 @@ export class DatabaseStorage implements IStorage {
       count: sql`COUNT(*)`.mapWith(Number)
     })
     .from(bookings)
-    .where(gte(bookings.createdAt, startOfDay.toISOString()));
+    .where(gte(bookings.createdAt, sql`${startOfDay.toISOString()}`));
     
     const todayBookings = todayResult?.count || 0;
     
@@ -216,7 +216,7 @@ export class DatabaseStorage implements IStorage {
       count: sql`COUNT(*)`.mapWith(Number)
     })
     .from(bookings)
-    .where(gte(bookings.createdAt, thirtyDaysAgo.toISOString()));
+    .where(gte(bookings.createdAt, sql`${thirtyDaysAgo.toISOString()}`));
     
     const recentBookings = recentResult?.count || 0;
     const oldPeriodBookings = totalBookings - recentBookings;
