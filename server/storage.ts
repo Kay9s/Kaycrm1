@@ -1,11 +1,12 @@
-import {
+import { 
   users, type User, type InsertUser,
   vehicles, type Vehicle, type InsertVehicle,
   customers, type Customer, type InsertCustomer,
   bookings, type Booking, type InsertBooking,
   supportTickets, type SupportTicket, type InsertSupportTicket
 } from "@shared/schema";
-import { format } from "date-fns";
+import { db } from './db';
+import { eq, and, or, gte, lte, desc, isNull, sql } from 'drizzle-orm';
 
 export interface IStorage {
   // Users
@@ -48,269 +49,182 @@ export interface IStorage {
   updateSupportTicketStatus(id: number, status: string): Promise<SupportTicket | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private vehicles: Map<number, Vehicle>;
-  private customers: Map<number, Customer>;
-  private bookings: Map<number, Booking>;
-  private supportTickets: Map<number, SupportTicket>;
-  
-  private userCurrentId: number;
-  private vehicleCurrentId: number;
-  private customerCurrentId: number;
-  private bookingCurrentId: number;
-  private supportTicketCurrentId: number;
-  
-  constructor() {
-    this.users = new Map();
-    this.vehicles = new Map();
-    this.customers = new Map();
-    this.bookings = new Map();
-    this.supportTickets = new Map();
-    
-    this.userCurrentId = 1;
-    this.vehicleCurrentId = 1;
-    this.customerCurrentId = 1;
-    this.bookingCurrentId = 1;
-    this.supportTicketCurrentId = 1;
-    
-    // Initialize with sample data
-    this.initializeData();
-  }
-  
-  private initializeData() {
-    // Create default admin user
-    this.createUser({
-      username: "admin",
-      password: "admin123",
-      fullName: "Admin User",
-      email: "admin@carflow.com",
-      role: "admin"
-    });
-    
-    // Create sample vehicles
-    const vehicleCategories = ["Sedan", "SUV", "Luxury", "Electric"];
-    const vehicleMakes = [
-      { make: "Toyota", model: "Camry", category: "Sedan", rate: 50 },
-      { make: "Honda", model: "Civic", category: "Sedan", rate: 45 },
-      { make: "Ford", model: "Explorer", category: "SUV", rate: 70 },
-      { make: "Nissan", model: "Rogue", category: "SUV", rate: 65 },
-      { make: "BMW", model: "5 Series", category: "Luxury", rate: 120 },
-      { make: "Mercedes", model: "E-Class", category: "Luxury", rate: 130 },
-      { make: "Tesla", model: "Model 3", category: "Electric", rate: 100 },
-      { make: "Chevrolet", model: "Bolt", category: "Electric", rate: 80 }
-    ];
-    
-    vehicleMakes.forEach((v, i) => {
-      this.createVehicle({
-        make: v.make,
-        model: v.model,
-        year: 2023,
-        licensePlate: `ABC${1000 + i}`,
-        category: v.category,
-        status: i % 5 === 0 ? "maintenance" : "available",
-        maintenanceStatus: i % 5 === 0 ? "scheduled" : "ok",
-        imageUrl: null,
-        dailyRate: v.rate
-      });
-    });
-    
-    // Create sample customers
-    const customerNames = [
-      { name: "Sarah Johnson", email: "sarah@example.com", phone: "555-1234" },
-      { name: "Michael Chen", email: "michael@example.com", phone: "555-2345" },
-      { name: "David Smith", email: "david@example.com", phone: "555-3456" },
-      { name: "Emma Wilson", email: "emma@example.com", phone: "555-4567" },
-      { name: "James Rodriguez", email: "james@example.com", phone: "555-5678" }
-    ];
-    
-    customerNames.forEach((c, i) => {
-      this.createCustomer({
-        fullName: c.name,
-        email: c.email,
-        phone: c.phone,
-        address: "123 Main St, Anytown, USA",
-        driverLicense: `DL${10000 + i}`,
-        notes: null
-      });
-    });
-    
-    // Create sample bookings
-    const today = new Date();
-    const bookingStatuses = ["pending", "active", "completed", "cancelled"];
-    const paymentStatuses = ["pending", "paid", "refunded"];
-    
-    for (let i = 0; i < 20; i++) {
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - 10 + i);
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + Math.floor(Math.random() * 5) + 1);
-      
-      const customerId = Math.floor(Math.random() * 5) + 1;
-      const vehicleId = Math.floor(Math.random() * 8) + 1;
-      const vehicle = this.vehicles.get(vehicleId);
-      const days = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const amount = vehicle ? vehicle.dailyRate * days : 100 * days;
-      
-      this.createBooking({
-        bookingRef: `BK-${7800 + i}`,
-        customerId,
-        vehicleId,
-        startDate,
-        endDate,
-        status: bookingStatuses[Math.floor(Math.random() * bookingStatuses.length)],
-        totalAmount: amount,
-        paymentStatus: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)],
-        notes: null,
-        source: Math.random() > 0.8 ? "n8n" : "direct",
-        googleCalendarEventId: null,
-        n8nWebhookData: null
-      });
-    }
-  }
-  
-  // User methods
+export class DatabaseStorage implements IStorage {
+  // Users
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
-  
+
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
-  
+
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
   
-  // Vehicle methods
+  // Vehicles
   async getVehicle(id: number): Promise<Vehicle | undefined> {
-    return this.vehicles.get(id);
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle || undefined;
   }
-  
+
   async getVehicles(): Promise<Vehicle[]> {
-    return Array.from(this.vehicles.values());
+    return db.select().from(vehicles);
   }
-  
+
   async getAvailableVehicles(startDate: Date, endDate: Date): Promise<Vehicle[]> {
-    const allVehicles = await this.getVehicles();
-    const activeBookings = Array.from(this.bookings.values()).filter(booking => 
-      booking.status !== 'cancelled' && 
-      (booking.endDate >= startDate && booking.startDate <= endDate)
-    );
+    // Find vehicles that don't have bookings in the date range
+    const rentedVehicleIds = await db.select({ id: bookings.vehicleId })
+      .from(bookings)
+      .where(
+        and(
+          or(
+            and(
+              lte(bookings.startDate, startDate.toISOString()),
+              gte(bookings.endDate, startDate.toISOString())
+            ),
+            and(
+              lte(bookings.startDate, endDate.toISOString()),
+              gte(bookings.endDate, endDate.toISOString())
+            ),
+            and(
+              gte(bookings.startDate, startDate.toISOString()),
+              lte(bookings.endDate, endDate.toISOString())
+            )
+          ),
+          eq(bookings.status, 'active')
+        )
+      );
     
-    const bookedVehicleIds = new Set(activeBookings.map(b => b.vehicleId));
+    const vehicleIdsToExclude = rentedVehicleIds.map(item => item.id);
     
-    return allVehicles.filter(v => 
-      v.status === 'available' && 
-      v.maintenanceStatus === 'ok' && 
-      !bookedVehicleIds.has(v.id)
+    if (vehicleIdsToExclude.length === 0) {
+      return this.getVehicles();
+    }
+    
+    return db.select().from(vehicles).where(
+      or(
+        sql`${vehicles.id} NOT IN (${vehicleIdsToExclude.join(',')})`,
+        eq(vehicles.status, 'available')
+      )
     );
   }
-  
+
   async getVehiclesByCategory(): Promise<Record<string, number>> {
-    const allVehicles = await this.getVehicles();
-    const categoryCounts: Record<string, number> = {};
+    const result = await db.select({
+      category: vehicles.category,
+      count: sql`COUNT(*)`.mapWith(Number)
+    })
+    .from(vehicles)
+    .groupBy(vehicles.category);
     
-    allVehicles.forEach(vehicle => {
-      if (categoryCounts[vehicle.category]) {
-        categoryCounts[vehicle.category]++;
-      } else {
-        categoryCounts[vehicle.category] = 1;
-      }
-    });
-    
-    return categoryCounts;
+    return result.reduce((acc, item) => {
+      acc[item.category] = item.count;
+      return acc;
+    }, {} as Record<string, number>);
   }
-  
+
   async createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle> {
-    const id = this.vehicleCurrentId++;
-    const vehicle: Vehicle = { ...insertVehicle, id };
-    this.vehicles.set(id, vehicle);
+    const [vehicle] = await db
+      .insert(vehicles)
+      .values(insertVehicle)
+      .returning();
     return vehicle;
   }
-  
+
   async updateVehicleStatus(id: number, status: string): Promise<Vehicle | undefined> {
-    const vehicle = await this.getVehicle(id);
-    if (vehicle) {
-      const updatedVehicle = { ...vehicle, status };
-      this.vehicles.set(id, updatedVehicle);
-      return updatedVehicle;
-    }
-    return undefined;
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({ status })
+      .where(eq(vehicles.id, id))
+      .returning();
+    return vehicle || undefined;
   }
   
-  // Customer methods
+  // Customers
   async getCustomer(id: number): Promise<Customer | undefined> {
-    return this.customers.get(id);
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer || undefined;
   }
-  
+
   async getCustomers(): Promise<Customer[]> {
-    return Array.from(this.customers.values());
+    return db.select().from(customers);
   }
-  
+
   async createCustomer(insertCustomer: InsertCustomer): Promise<Customer> {
-    const id = this.customerCurrentId++;
-    const customer: Customer = { ...insertCustomer, id, createdAt: new Date() };
-    this.customers.set(id, customer);
+    const [customer] = await db
+      .insert(customers)
+      .values(insertCustomer)
+      .returning();
     return customer;
   }
   
-  // Booking methods
+  // Bookings
   async getBooking(id: number): Promise<Booking | undefined> {
-    return this.bookings.get(id);
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking || undefined;
   }
-  
+
   async getBookingByRef(bookingRef: string): Promise<Booking | undefined> {
-    return Array.from(this.bookings.values()).find(
-      (booking) => booking.bookingRef === bookingRef,
-    );
+    const [booking] = await db.select().from(bookings).where(eq(bookings.bookingRef, bookingRef));
+    return booking || undefined;
   }
-  
+
   async getBookings(): Promise<Booking[]> {
-    return Array.from(this.bookings.values());
+    return db.select().from(bookings);
   }
-  
+
   async getRecentBookings(limit: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, limit);
+    return db.select()
+      .from(bookings)
+      .orderBy(desc(bookings.createdAt))
+      .limit(limit);
   }
-  
+
   async getBookingsStats(): Promise<{ totalBookings: number; recentIncrease: number; todayBookings: number; }> {
-    const allBookings = await this.getBookings();
-    const totalBookings = allBookings.length;
+    // Get total bookings
+    const [totalResult] = await db.select({
+      count: sql`COUNT(*)`.mapWith(Number)
+    }).from(bookings);
     
+    const totalBookings = totalResult?.count || 0;
+    
+    // Get today's bookings (using current date)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
-    const todayBookings = allBookings.filter(b => {
-      const bookingDate = new Date(b.createdAt);
-      bookingDate.setHours(0, 0, 0, 0);
-      return bookingDate.getTime() === today.getTime();
-    }).length;
+    const [todayResult] = await db.select({
+      count: sql`COUNT(*)`.mapWith(Number)
+    })
+    .from(bookings)
+    .where(gte(bookings.createdAt, startOfDay.toISOString()));
     
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const todayBookings = todayResult?.count || 0;
     
-    const lastMonthBookings = allBookings.filter(b => 
-      b.createdAt >= oneMonthAgo && b.createdAt < today
-    ).length;
+    // Get bookings from previous period for increase calculation
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const previousMonthStart = new Date(oneMonthAgo);
-    previousMonthStart.setMonth(previousMonthStart.getMonth() - 1);
+    const [recentResult] = await db.select({
+      count: sql`COUNT(*)`.mapWith(Number)
+    })
+    .from(bookings)
+    .where(gte(bookings.createdAt, thirtyDaysAgo.toISOString()));
     
-    const previousMonthBookings = allBookings.filter(b => 
-      b.createdAt >= previousMonthStart && b.createdAt < oneMonthAgo
-    ).length;
+    const recentBookings = recentResult?.count || 0;
+    const oldPeriodBookings = totalBookings - recentBookings;
     
-    const recentIncrease = previousMonthBookings 
-      ? Math.round(((lastMonthBookings - previousMonthBookings) / previousMonthBookings) * 100) 
-      : 0;
+    let recentIncrease = 0;
+    if (oldPeriodBookings > 0) {
+      recentIncrease = Math.round((recentBookings - oldPeriodBookings) / oldPeriodBookings * 100);
+    }
     
     return {
       totalBookings,
@@ -318,134 +232,83 @@ export class MemStorage implements IStorage {
       todayBookings
     };
   }
-  
+
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const id = this.bookingCurrentId++;
-    const booking: Booking = { 
-      ...insertBooking, 
-      id, 
-      createdAt: new Date()
-    };
-    this.bookings.set(id, booking);
+    const [booking] = await db
+      .insert(bookings)
+      .values(insertBooking)
+      .returning();
     return booking;
   }
-  
+
   async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    const booking = await this.getBooking(id);
-    if (booking) {
-      const updatedBooking = { ...booking, status };
-      this.bookings.set(id, updatedBooking);
-      return updatedBooking;
-    }
-    return undefined;
+    const [booking] = await db
+      .update(bookings)
+      .set({ status })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking || undefined;
   }
-  
+
   async updateBookingFromN8n(bookingData: any): Promise<Booking | undefined> {
-    let booking: Booking | undefined;
+    // Look up the booking by reference
+    const existingBooking = await this.getBookingByRef(bookingData.bookingRef);
     
-    // Try to find existing booking by reference if provided
-    if (bookingData.bookingRef) {
-      booking = await this.getBookingByRef(bookingData.bookingRef);
+    if (!existingBooking) {
+      return undefined;
     }
     
-    // If booking exists, update it
-    if (booking) {
-      const updatedBooking = { 
-        ...booking, 
-        ...bookingData,
-        n8nWebhookData: bookingData
-      };
-      this.bookings.set(booking.id, updatedBooking);
-      return updatedBooking;
-    } 
-    // Otherwise create a new booking
-    else {
-      // Find or create customer
-      let customerId = bookingData.customerId;
-      if (!customerId && bookingData.customerEmail) {
-        const existingCustomer = Array.from(this.customers.values()).find(
-          c => c.email === bookingData.customerEmail
-        );
-        
-        if (existingCustomer) {
-          customerId = existingCustomer.id;
-        } else if (bookingData.customerName) {
-          const newCustomer = await this.createCustomer({
-            fullName: bookingData.customerName,
-            email: bookingData.customerEmail,
-            phone: bookingData.customerPhone || "Unknown",
-            driverLicense: bookingData.driverLicense || "Unknown",
-            address: bookingData.customerAddress,
-            notes: "Created from n8n webhook"
-          });
-          customerId = newCustomer.id;
-        }
-      }
-      
-      if (!customerId) {
-        return undefined;
-      }
-      
-      // Create new booking
-      const bookingRef = bookingData.bookingRef || `BK-${this.bookingCurrentId + 7800}`;
-      const vehicleId = bookingData.vehicleId || 1; // Default to first vehicle if not specified
-      const startDate = bookingData.startDate ? new Date(bookingData.startDate) : new Date();
-      const endDate = bookingData.endDate ? new Date(bookingData.endDate) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-      
-      return this.createBooking({
-        bookingRef,
-        customerId,
-        vehicleId,
-        startDate,
-        endDate,
-        status: bookingData.status || "pending",
-        totalAmount: bookingData.totalAmount || 0,
-        paymentStatus: bookingData.paymentStatus || "pending",
-        notes: bookingData.notes || "Created from n8n webhook",
-        source: "n8n",
-        googleCalendarEventId: bookingData.googleCalendarEventId,
-        n8nWebhookData: bookingData
-      });
-    }
+    // Update with data from n8n
+    const [booking] = await db
+      .update(bookings)
+      .set({ 
+        n8nWebhookData: bookingData,
+        ...bookingData // Apply any fields from n8n that match our schema
+      })
+      .where(eq(bookings.id, existingBooking.id))
+      .returning();
+    
+    return booking || undefined;
   }
-  
+
   async getBookingsByDateRange(startDate: Date, endDate: Date): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(booking => 
-      (booking.startDate <= endDate && booking.endDate >= startDate)
-    );
+    return db.select()
+      .from(bookings)
+      .where(
+        and(
+          gte(bookings.startDate, startDate.toISOString()),
+          lte(bookings.endDate, endDate.toISOString())
+        )
+      );
   }
   
-  // Support Ticket methods
+  // Support Tickets
   async getSupportTicket(id: number): Promise<SupportTicket | undefined> {
-    return this.supportTickets.get(id);
+    const [ticket] = await db.select().from(supportTickets).where(eq(supportTickets.id, id));
+    return ticket || undefined;
   }
-  
+
   async getSupportTickets(): Promise<SupportTicket[]> {
-    return Array.from(this.supportTickets.values());
+    return db.select().from(supportTickets);
   }
-  
+
   async createSupportTicket(insertTicket: InsertSupportTicket): Promise<SupportTicket> {
-    const id = this.supportTicketCurrentId++;
-    const ticket: SupportTicket = { 
-      ...insertTicket, 
-      id, 
-      createdAt: new Date(),
-      resolvedAt: null
-    };
-    this.supportTickets.set(id, ticket);
+    const [ticket] = await db
+      .insert(supportTickets)
+      .values(insertTicket)
+      .returning();
     return ticket;
   }
-  
+
   async updateSupportTicketStatus(id: number, status: string): Promise<SupportTicket | undefined> {
-    const ticket = await this.getSupportTicket(id);
-    if (ticket) {
-      const resolvedAt = status === "resolved" ? new Date() : ticket.resolvedAt;
-      const updatedTicket = { ...ticket, status, resolvedAt };
-      this.supportTickets.set(id, updatedTicket);
-      return updatedTicket;
-    }
-    return undefined;
+    const [ticket] = await db
+      .update(supportTickets)
+      .set({ status })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return ticket || undefined;
   }
 }
 
-export const storage = new MemStorage();
+// Use the DatabaseStorage instead of MemStorage
+export const storage = new DatabaseStorage();
