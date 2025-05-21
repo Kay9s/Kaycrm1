@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Booking, Customer, Vehicle, SupportTicket } from "@shared/schema";
+import StatusChanger from "@/components/bookings/StatusChanger";
 import { 
   Card, 
   CardContent, 
@@ -431,23 +432,18 @@ export default function BookingDetails({ id }: BookingDetailsProps) {
               <div className="flex items-center gap-3 w-full justify-between">
                 <div className="flex items-center">
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 mr-3">Update Status:</p>
-                  <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {booking && (
+                    <StatusChanger 
+                      bookingId={booking.id} 
+                      currentStatus={booking.status} 
+                    />
+                  )}
                 </div>
                 <Button 
-                  onClick={handleStatusUpdate}
-                  disabled={newStatus === booking?.status || updateStatusMutation.isPending}
+                  variant="outline"
+                  onClick={handleBack}
                 >
-                  {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+                  Back to Bookings
                 </Button>
               </div>
             </CardFooter>
