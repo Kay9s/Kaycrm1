@@ -247,9 +247,11 @@ export default function Customers() {
             </div>
             
             <div>
-              <Button variant="outline">
-                Export Customers
-              </Button>
+              <ExportToSheets 
+                dataType="customers"
+                data={customers || []}
+                disabled={isLoading || !customers?.length}
+              />
             </div>
           </div>
           
