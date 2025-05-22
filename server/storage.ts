@@ -251,24 +251,80 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBookingFromN8n(bookingData: any): Promise<Booking | undefined> {
-    // Look up the booking by reference
-    const existingBooking = await this.getBookingByRef(bookingData.bookingRef);
+    console.log("Processing n8n webhook data:", JSON.stringify(bookingData, null, 2));
     
-    if (!existingBooking) {
+    // Extract booking reference from the data
+    const bookingRef = bookingData.bookingRef || bookingData.booking_ref || bookingData.reference;
+    
+    if (!bookingRef) {
+      console.error("No booking reference found in n8n data");
       return undefined;
     }
     
-    // Update with data from n8n
-    const [booking] = await db
-      .update(bookings)
-      .set({ 
-        n8nWebhookData: bookingData,
-        ...bookingData // Apply any fields from n8n that match our schema
-      })
-      .where(eq(bookings.id, existingBooking.id))
-      .returning();
+    // Look up the booking by reference
+    const existingBooking = await this.getBookingByRef(bookingRef);
     
-    return booking || undefined;
+    if (!existingBooking) {
+      console.log(`No booking found with reference: ${bookingRef}, creating new booking...`);
+      
+      // If no existing booking is found, create a new one if we have sufficient data
+      try {
+        if (bookingData.customerId && bookingData.vehicleId && bookingData.startDate && bookingData.endDate) {
+          // We have minimum required fields to create a booking
+          const newBookingData = {
+            bookingRef: bookingRef,
+            customerId: Number(bookingData.customerId),
+            vehicleId: Number(bookingData.vehicleId),
+            startDate: new Date(bookingData.startDate).toISOString(),
+            endDate: new Date(bookingData.endDate).toISOString(),
+            totalAmount: Number(bookingData.totalAmount || 0),
+            status: bookingData.status || 'pending',
+            paymentStatus: bookingData.paymentStatus || 'pending',
+            source: 'n8n',
+            notes: bookingData.notes || 'Created via n8n webhook',
+            n8nWebhookData: bookingData
+          };
+          
+          return this.createBooking(newBookingData);
+        } else {
+          console.error("Insufficient data to create booking from n8n");
+          return undefined;
+        }
+      } catch (error) {
+        console.error("Error creating booking from n8n data:", error);
+        return undefined;
+      }
+    }
+    
+    console.log(`Updating booking with ID: ${existingBooking.id}`);
+    
+    // Prepare the update data, ensuring it conforms to our schema
+    const updateData: any = {
+      n8nWebhookData: bookingData
+    };
+    
+    // Add fields from n8n that match our schema
+    if (bookingData.status) updateData.status = bookingData.status;
+    if (bookingData.paymentStatus) updateData.paymentStatus = bookingData.paymentStatus;
+    if (bookingData.totalAmount) updateData.totalAmount = Number(bookingData.totalAmount);
+    if (bookingData.startDate) updateData.startDate = new Date(bookingData.startDate);
+    if (bookingData.endDate) updateData.endDate = new Date(bookingData.endDate);
+    if (bookingData.notes) updateData.notes = bookingData.notes;
+    if (bookingData.googleCalendarEventId) updateData.googleCalendarEventId = bookingData.googleCalendarEventId;
+    
+    try {
+      // Update with data from n8n
+      const [booking] = await db
+        .update(bookings)
+        .set(updateData)
+        .where(eq(bookings.id, existingBooking.id))
+        .returning();
+      
+      return booking || undefined;
+    } catch (error) {
+      console.error("Error updating booking from n8n data:", error);
+      return undefined;
+    }
   }
 
   async getBookingsByDateRange(startDate: Date, endDate: Date): Promise<Booking[]> {
