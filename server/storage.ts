@@ -13,6 +13,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  hasAdminUser(): Promise<boolean>;
   
   // Vehicles
   getVehicle(id: number): Promise<Vehicle | undefined>;
@@ -67,6 +68,16 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+  
+  async hasAdminUser(): Promise<boolean> {
+    const [result] = await db.select({
+      count: sql`COUNT(*)`.mapWith(Number)
+    })
+    .from(users)
+    .where(eq(users.role, 'admin'));
+    
+    return (result?.count || 0) > 0;
   }
   
   // Vehicles
