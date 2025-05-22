@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
   
   // Login form state
@@ -30,15 +32,14 @@ export default function LoginPage() {
     mutationFn: async (credentials: { username: string; password: string }) => {
       return apiRequest("POST", "/api/auth/login", credentials);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Login successful",
         description: "Welcome back to CarFlow",
       });
       
-      // Store the token in localStorage
-      localStorage.setItem("carflow_token", data.token);
-      localStorage.setItem("carflow_user", JSON.stringify(data.user));
+      // Use the auth hook to store user data
+      login(data.user, data.token);
       
       // Redirect to dashboard
       setLocation("/");
@@ -62,7 +63,7 @@ export default function LoginPage() {
     }) => {
       return apiRequest("POST", "/api/auth/register", userData);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Registration successful",
         description: "Your account has been created",

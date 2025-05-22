@@ -12,6 +12,7 @@ import Fleet from "@/pages/fleet";
 import Customers from "@/pages/customers";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
+import Login from "@/pages/login";
 
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -84,6 +85,10 @@ function Router() {
         <AppLayout>
           <Settings />
         </AppLayout>
+      )} />
+      {/* Login page - no AppLayout */}
+      <Route path="/login" component={() => (
+        <Login />
       )} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />

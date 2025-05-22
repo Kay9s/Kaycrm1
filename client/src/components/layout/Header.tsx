@@ -73,17 +73,46 @@ export default function Header() {
               <Search className="h-5 w-5" />
             </Button>
             
-            {/* User Profile */}
+            {/* User Profile or Login Button */}
             <div className="hidden md:flex items-center ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
-              <div className="flex items-center">
-                <img 
-                  src="https://ui-avatars.com/api/?name=John+Doe&background=4448c5&color=fff" 
-                  alt="John Doe" 
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">John Doe</span>
-                <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
-              </div>
+              {localStorage.getItem('carflow_token') ? (
+                <div className="flex items-center relative group">
+                  <img 
+                    src="https://ui-avatars.com/api/?name=John+Doe&background=4448c5&color=fff" 
+                    alt="John Doe" 
+                    className="w-8 h-8 rounded-full cursor-pointer"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">
+                    {JSON.parse(localStorage.getItem('carflow_user') || '{"fullName":"John Doe"}').fullName}
+                  </span>
+                  <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
+                  
+                  {/* Dropdown menu */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Settings
+                      </a>
+                      <a href="#" onClick={(e) => {
+                        e.preventDefault();
+                        localStorage.removeItem('carflow_token');
+                        localStorage.removeItem('carflow_user');
+                        window.location.href = '/login';
+                      }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Logout
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Login / Register
+                </Button>
+              )}
             </div>
           </div>
         </div>
