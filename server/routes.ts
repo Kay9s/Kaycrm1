@@ -7,6 +7,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import authRoutes from './routes/auth';
 import googleRoutes from './routes/google';
+import webhookRoutes from './routes/webhooks'; 
 import { authenticate, requireAdmin } from './middleware/auth';
 import * as authService from './services/auth';
 
@@ -23,6 +24,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Google service routes
   app.use('/api/google', googleRoutes);
+  
+  // Register webhook/n8n routes
+  app.use('/api/webhooks', webhookRoutes);
 
   // Error handler helper
   const handleZodError = (err: unknown, res: Response) => {

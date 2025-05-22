@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Vehicle } from "@shared/schema";
 import { Search, Plus, Filter, Check, X, AlertTriangle, Car } from "lucide-react";
+import ExportToSheets from "@/components/ExportToSheets";
 import AddVehicleForm from "@/components/vehicles/AddVehicleForm";
 
 export default function Fleet() {
@@ -253,6 +254,12 @@ export default function Fleet() {
                 </div>
                 
                 <div className="flex gap-2">
+                  <ExportToSheets 
+                    dataType="vehicles"
+                    data={vehicles || []}
+                    disabled={isLoading || !vehicles?.length}
+                  />
+                  
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Filter by category" />

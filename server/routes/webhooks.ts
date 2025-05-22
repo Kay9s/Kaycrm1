@@ -1,14 +1,14 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
 
 const router = Router();
 
 /**
- * Handle webhook for new booking from n8n
+ * Handle n8n HTTP request for new booking
  */
 router.post('/booking', async (req, res) => {
   try {
-    console.log('Received n8n webhook with booking data:', req.body);
+    console.log('Received n8n HTTP request with booking data:', req.body);
     
     const bookingData = req.body;
     
@@ -29,10 +29,10 @@ router.post('/booking', async (req, res) => {
       data: booking
     });
   } catch (error: any) {
-    console.error('Error processing webhook:', error);
+    console.error('Error processing n8n request:', error);
     return res.status(500).json({ 
       success: false, 
-      message: error.message || 'An error occurred processing the webhook'
+      message: error.message || 'An error occurred processing the request'
     });
   }
 });
@@ -43,7 +43,7 @@ router.post('/booking', async (req, res) => {
 router.get('/test', (req, res) => {
   return res.status(200).json({
     success: true,
-    message: 'n8n webhook connection is working',
+    message: 'n8n connection is working',
     timestamp: new Date().toISOString()
   });
 });
@@ -63,7 +63,10 @@ router.post('/send-to-n8n', async (req, res) => {
       });
     }
     
-    // Send data to n8n via webhook URL
+    // Send data to n8n via HTTP request
+    console.log(`Sending data to n8n at URL: ${url}`);
+    console.log('Data being sent:', data);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
