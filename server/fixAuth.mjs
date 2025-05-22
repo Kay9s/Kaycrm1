@@ -22,7 +22,7 @@ async function fixAuthentication() {
     if (checkResult.rows.length === 0) {
       // User doesn't exist, create it
       const result = await pool.query(
-        'INSERT INTO users (username, password, "fullName", email, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        'INSERT INTO users (username, password, full_name, email, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [username, password, 'Test User', 'test@carflow.com', 'admin']
       );
       
