@@ -40,18 +40,27 @@ export default function LoginPage() {
       
       console.log('Login response:', data);
       
-      // Store user info in local storage
-      localStorage.setItem("carflow_token", data.token);
-      localStorage.setItem("carflow_user", JSON.stringify({
-        id: data.user.id,
-        username: data.user.username,
-        fullName: data.user.fullName,
-        email: data.user.email,
-        role: data.user.role
-      }));
-      
-      // Redirect to dashboard
-      setLocation("/");
+      if (data && data.user && data.token) {
+        // Store user info in local storage with proper handling of snake_case column names
+        localStorage.setItem("carflow_token", data.token);
+        localStorage.setItem("carflow_user", JSON.stringify({
+          id: data.user.id,
+          username: data.user.username,
+          fullName: data.user.full_name, // Using snake_case from database
+          email: data.user.email,
+          role: data.user.role
+        }));
+        
+        // Redirect to dashboard
+        setLocation("/");
+      } else {
+        console.error("Incomplete login response:", data);
+        toast({
+          title: "Login error",
+          description: "Received invalid response from server",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
