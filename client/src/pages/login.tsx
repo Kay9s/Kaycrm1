@@ -69,9 +69,8 @@ export default function LoginPage() {
         description: "Your account has been created",
       });
       
-      // Store the token in localStorage
-      localStorage.setItem("carflow_token", data.token);
-      localStorage.setItem("carflow_user", JSON.stringify(data.user));
+      // Use the auth hook to store user data
+      login(data.user, data.token);
       
       // Redirect to dashboard
       setLocation("/");

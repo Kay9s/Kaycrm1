@@ -19,15 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Vehicle } from "@shared/schema";
 import { Search, Plus, Filter, Check, X, AlertTriangle, Car } from "lucide-react";
+import AddVehicleForm from "@/components/vehicles/AddVehicleForm";
 
 export default function Fleet() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,67 +137,7 @@ export default function Fleet() {
         </div>
         
         <div className="mt-4 md:mt-0">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Vehicle
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Vehicle</DialogTitle>
-                <DialogDescription>
-                  Enter the details of the new vehicle to add to your fleet.
-                </DialogDescription>
-              </DialogHeader>
-              {/* Placeholder for vehicle form - would implement a proper form component in a real app */}
-              <div className="py-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Make</label>
-                    <Input placeholder="e.g. Toyota" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Model</label>
-                    <Input placeholder="e.g. Camry" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Year</label>
-                    <Input type="number" placeholder="e.g. 2023" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">License Plate</label>
-                    <Input placeholder="e.g. ABC123" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Sedan">Sedan</SelectItem>
-                        <SelectItem value="SUV">SUV</SelectItem>
-                        <SelectItem value="Luxury">Luxury</SelectItem>
-                        <SelectItem value="Electric">Electric</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Daily Rate</label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">$</div>
-                      <Input type="number" className="pl-6" placeholder="e.g. 50" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Add Vehicle</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <AddVehicleForm />
         </div>
       </div>
       
