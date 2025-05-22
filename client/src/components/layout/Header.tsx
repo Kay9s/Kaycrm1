@@ -83,7 +83,14 @@ export default function Header() {
                     className="w-8 h-8 rounded-full cursor-pointer"
                   />
                   <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">
-                    {JSON.parse(localStorage.getItem('carflow_user') || '{"fullName":"John Doe"}').fullName}
+                    {(() => {
+                      try {
+                        const userData = localStorage.getItem('carflow_user');
+                        return userData ? JSON.parse(userData).fullName : "John Doe";
+                      } catch (error) {
+                        return "John Doe";
+                      }
+                    })()}
                   </span>
                   <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
                   

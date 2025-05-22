@@ -38,8 +38,17 @@ export default function LoginPage() {
         description: "Welcome back to CarFlow",
       });
       
-      // Use the auth hook to store user data
-      login(data.user, data.token);
+      console.log('Login response:', data);
+      
+      // Store user info in local storage
+      localStorage.setItem("carflow_token", data.token);
+      localStorage.setItem("carflow_user", JSON.stringify({
+        id: data.user.id,
+        username: data.user.username,
+        fullName: data.user.fullName,
+        email: data.user.email,
+        role: data.user.role
+      }));
       
       // Redirect to dashboard
       setLocation("/");
@@ -69,8 +78,17 @@ export default function LoginPage() {
         description: "Your account has been created",
       });
       
-      // Use the auth hook to store user data
-      login(data.user, data.token);
+      console.log('Registration response:', data);
+      
+      // Store user info in local storage
+      localStorage.setItem("carflow_token", data.token);
+      localStorage.setItem("carflow_user", JSON.stringify({
+        id: data.user.id,
+        username: data.user.username,
+        fullName: data.user.fullName,
+        email: data.user.email,
+        role: data.user.role
+      }));
       
       // Redirect to dashboard
       setLocation("/");
