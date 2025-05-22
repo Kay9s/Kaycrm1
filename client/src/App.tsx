@@ -13,6 +13,7 @@ import Customers from "@/pages/customers";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
+import TestLogin from "@/pages/TestLogin";
 
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -89,6 +90,10 @@ function Router() {
       {/* Login page - no AppLayout */}
       <Route path="/login" component={() => (
         <Login />
+      )} />
+      {/* Test Login page - no AppLayout */}
+      <Route path="/test-login" component={() => (
+        <TestLogin />
       )} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
