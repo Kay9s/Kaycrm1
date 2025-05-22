@@ -34,12 +34,19 @@ router.post('/register', async (req: Request, res: Response) => {
       data.role
     );
     
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user;
+    // Remove password from response and format response for frontend
+    const { password, ...userData } = user;
+    
+    // Create a response object that matches frontend expectations
+    const userResponse = {
+      ...userData,
+      // Include both formats for compatibility
+      fullName: userData.fullName,
+    };
     
     res.status(201).json({
       message: 'User registered successfully',
-      user: userWithoutPassword,
+      user: userResponse,
       token,
     });
   } catch (error) {
@@ -67,12 +74,19 @@ router.post('/login', async (req: Request, res: Response) => {
       data.password
     );
     
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user;
+    // Remove password from response and format response for frontend
+    const { password, ...userData } = user;
+    
+    // Create a response object that matches frontend expectations
+    const userResponse = {
+      ...userData,
+      // Include both formats for compatibility
+      fullName: userData.fullName, 
+    };
     
     res.json({
       message: 'Login successful',
-      user: userWithoutPassword,
+      user: userResponse,
       token,
     });
   } catch (error) {
