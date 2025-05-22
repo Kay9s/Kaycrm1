@@ -5,8 +5,25 @@ import { z } from "zod";
 import { insertBookingSchema, insertCustomerSchema, insertSupportTicketSchema, insertVehicleSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import authRoutes from './routes/auth';
+import googleRoutes from './routes/google';
+import { authenticate, requireAdmin } from './middleware/auth';
+import * as authService from './services/auth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Create a default admin user if none exists
+  try {
+    await authService.createDefaultAdminIfNeeded();
+  } catch (error) {
+    console.error('Error creating default admin user:', error);
+  }
+
+  // Register authentication routes
+  app.use('/api/auth', authRoutes);
+  
+  // Register Google service routes
+  app.use('/api/google', googleRoutes);
+
   // Error handler helper
   const handleZodError = (err: unknown, res: Response) => {
     if (err instanceof ZodError) {

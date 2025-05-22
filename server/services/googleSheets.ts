@@ -16,7 +16,7 @@ const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
  * @param title The title of the new sheet
  * @returns The ID of the new sheet
  */
-export async function createBookingsSheet(title: string) {
+export async function createBookingsSheet(title: string): Promise<string | null> {
   try {
     if (!oauth2Client.credentials.access_token) {
       console.error('Google Sheets not authenticated');
@@ -43,68 +43,71 @@ export async function createBookingsSheet(title: string) {
       },
     });
 
-    console.log('Spreadsheet created with ID:', response.data.spreadsheetId);
+    const spreadsheetId = response.data.spreadsheetId;
+    console.log('Spreadsheet created with ID:', spreadsheetId);
     
-    // Set up header row
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: response.data.spreadsheetId,
-      range: 'Bookings!A1:J1',
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [
-          [
-            'Booking Ref', 
-            'Customer', 
-            'Vehicle', 
-            'Start Date', 
-            'End Date', 
-            'Status', 
-            'Payment Status', 
-            'Total Amount', 
-            'Created At', 
-            'Notes'
+    // If we got a spreadsheet ID, set up header row
+    if (spreadsheetId) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: spreadsheetId,
+        range: 'Bookings!A1:J1',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [
+            [
+              'Booking Ref', 
+              'Customer', 
+              'Vehicle', 
+              'Start Date', 
+              'End Date', 
+              'Status', 
+              'Payment Status', 
+              'Total Amount', 
+              'Created At', 
+              'Notes'
+            ],
           ],
-        ],
-      },
-    });
+        },
+      });
 
-    // Format header row
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: response.data.spreadsheetId,
-      requestBody: {
-        requests: [
-          {
-            repeatCell: {
-              range: {
-                sheetId: 0,
-                startRowIndex: 0,
-                endRowIndex: 1,
-              },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: {
-                    red: 0.2,
-                    green: 0.2,
-                    blue: 0.8,
-                  },
-                  textFormat: {
-                    foregroundColor: {
-                      red: 1.0,
-                      green: 1.0,
-                      blue: 1.0,
+      // Format header row
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              repeatCell: {
+                range: {
+                  sheetId: 0,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    backgroundColor: {
+                      red: 0.2,
+                      green: 0.2,
+                      blue: 0.8,
                     },
-                    bold: true,
+                    textFormat: {
+                      foregroundColor: {
+                        red: 1.0,
+                        green: 1.0,
+                        blue: 1.0,
+                      },
+                      bold: true,
+                    },
                   },
                 },
+                fields: 'userEnteredFormat(backgroundColor,textFormat)',
               },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)',
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      });
+    }
 
-    return response.data.spreadsheetId;
+    return spreadsheetId || null;
   } catch (error) {
     console.error('Error creating Google Sheet:', error);
     return null;
@@ -117,7 +120,7 @@ export async function createBookingsSheet(title: string) {
  * @param bookings The bookings data to add
  * @returns True if successful, false otherwise
  */
-export async function addBookingsToSheet(spreadsheetId: string, bookings: any[]) {
+export async function addBookingsToSheet(spreadsheetId: string, bookings: any[]): Promise<boolean> {
   try {
     if (!oauth2Client.credentials.access_token) {
       console.error('Google Sheets not authenticated');
@@ -166,7 +169,7 @@ export async function addBookingsToSheet(spreadsheetId: string, bookings: any[])
  * Gets the authorization URL for Google Sheets
  * @returns The authorization URL
  */
-export function getAuthUrl() {
+export function getAuthUrl(): string {
   const scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
   ];
@@ -183,7 +186,7 @@ export function getAuthUrl() {
  * @param code The authorization code from Google
  * @returns The tokens
  */
-export async function handleCallback(code: string) {
+export async function handleCallback(code: string): Promise<any> {
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
@@ -198,7 +201,7 @@ export async function handleCallback(code: string) {
  * Sets the OAuth tokens for the Google client
  * @param tokens The OAuth tokens
  */
-export function setTokens(tokens: any) {
+export function setTokens(tokens: any): void {
   oauth2Client.setCredentials(tokens);
 }
 
@@ -206,6 +209,6 @@ export function setTokens(tokens: any) {
  * Checks if the Google client is authenticated
  * @returns True if authenticated, false otherwise
  */
-export function isAuthenticated() {
+export function isAuthenticated(): boolean {
   return !!oauth2Client.credentials.access_token;
 }
