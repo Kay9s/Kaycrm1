@@ -267,7 +267,7 @@ export default function Fleet() {
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
                       {getCategories().map((category, index) => (
-                        <SelectItem key={index} value={category}>{category}</SelectItem>
+                        <SelectItem key={index} value={category || `category-${index}`}>{category || `Category ${index}`}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

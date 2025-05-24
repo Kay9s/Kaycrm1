@@ -390,7 +390,7 @@ export default function Customers() {
                 <div>
                   <h2 className="text-2xl font-semibold">{selectedCustomer.fullName}</h2>
                   <p className="text-neutral-500 dark:text-neutral-400">
-                    Customer since {new Date(selectedCustomer.createdAt).toLocaleDateString()}
+                    Customer since {selectedCustomer.createdAt ? new Date(String(selectedCustomer.createdAt)).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>
