@@ -60,7 +60,7 @@ export default function FleetCategoryChart() {
                   <span className="text-sm">{category.name}</span>
                   <span className="text-xs font-medium">{category.percentage}%</span>
                 </div>
-                <Progress value={category.percentage} className="h-2" />
+                <Progress value={category.percentage} className="h-2 bg-neutral-200 [&>div]:bg-purple-500" />
               </div>
             ))}
           </div>

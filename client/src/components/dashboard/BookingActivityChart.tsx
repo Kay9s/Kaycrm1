@@ -125,7 +125,7 @@ export default function BookingActivityChart() {
                 <Bar 
                   dataKey="value" 
                   name="Bookings" 
-                  fill="hsl(var(--primary))" 
+                  fill="#8a4fff" 
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
