@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import ExportToSheets from "@/components/ExportToSheets";
 import {
   Dialog,
@@ -38,7 +41,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Customer, Booking } from "@shared/schema";
-import { Search, Plus, ArrowUpDown, Mail, Phone, User } from "lucide-react";
+import { Search, Plus, ArrowUpDown, Mail, Phone, User, Calendar, MapPin, Car, FileEdit } from "lucide-react";
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -328,8 +331,26 @@ export default function Customers() {
                       <TableCell className="text-right">{getBookingsCount(customer.id)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="sm">View</Button>
-                          <Button variant="ghost" size="sm">Edit</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setShowViewDialog(true);
+                            }}
+                          >
+                            View
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setShowEditDialog(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -347,6 +368,186 @@ export default function Customers() {
           {totalPages > 1 && renderPagination()}
         </CardFooter>
       </Card>
+      
+      {/* View Customer Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Customer Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about this customer
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCustomer && (
+            <div className="py-4">
+              <div className="flex items-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center mr-4">
+                  <User className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold">{selectedCustomer.fullName}</h2>
+                  <p className="text-neutral-500 dark:text-neutral-400">
+                    Customer since {new Date(selectedCustomer.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-medium text-lg mb-4">Contact Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <Mail className="h-5 w-5 mr-3 text-neutral-500" />
+                      <div>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">Email</p>
+                        <p>{selectedCustomer.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <Phone className="h-5 w-5 mr-3 text-neutral-500" />
+                      <div>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">Phone</p>
+                        <p>{selectedCustomer.phone}</p>
+                      </div>
+                    </div>
+                    {selectedCustomer.address && (
+                      <div className="flex items-start">
+                        <MapPin className="h-5 w-5 mr-3 text-neutral-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">Address</p>
+                          <p>{selectedCustomer.address}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium text-lg mb-4">Customer Details</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <FileEdit className="h-5 w-5 mr-3 text-neutral-500" />
+                      <div>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">Driver License</p>
+                        <p>{selectedCustomer.driverLicense || "Not provided"}</p>
+                      </div>
+                    </div>
+                    {selectedCustomer.notes && (
+                      <div className="flex items-start">
+                        <div className="w-5 mr-3" />
+                        <div>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">Notes</p>
+                          <p>{selectedCustomer.notes}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div>
+                <h3 className="font-medium text-lg mb-4">Booking History</h3>
+                {bookings && bookings.filter((booking: Booking) => booking.customerId === selectedCustomer.id).length > 0 ? (
+                  <div className="space-y-3">
+                    {bookings
+                      .filter((booking: Booking) => booking.customerId === selectedCustomer.id)
+                      .slice(0, 3)
+                      .map((booking: Booking) => (
+                        <div key={booking.id} className="p-3 border rounded-md">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <Calendar className="h-5 w-5 mr-2 text-neutral-500" />
+                              <div>
+                                <p className="font-medium">Booking #{booking.bookingRef}</p>
+                                <p className="text-sm text-neutral-500">
+                                  {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge variant={booking.status === "completed" ? "default" : booking.status === "pending" ? "outline" : "secondary"}>
+                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-neutral-500 dark:text-neutral-400">This customer has no bookings yet.</p>
+                )}
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowViewDialog(false);
+                    setShowEditDialog(true);
+                  }}
+                  className="mr-2"
+                >
+                  Edit Customer
+                </Button>
+                <Button onClick={() => setShowViewDialog(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Customer Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+            <DialogDescription>
+              Update customer information
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCustomer && (
+            <div className="py-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Full Name</label>
+                  <Input defaultValue={selectedCustomer.fullName} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Email</label>
+                  <Input type="email" defaultValue={selectedCustomer.email} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input defaultValue={selectedCustomer.phone} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Address</label>
+                  <Input defaultValue={selectedCustomer.address || ''} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Driver License</label>
+                  <Input defaultValue={selectedCustomer.driverLicense || ''} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Notes</label>
+                  <Textarea defaultValue={selectedCustomer.notes || ''} />
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+                <Button type="submit">Update Customer</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
