@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Card, 
   CardContent, 
@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import ExportToSheets from "@/components/ExportToSheets";
 import {
   Dialog,
@@ -513,37 +515,54 @@ export default function Customers() {
           
           {selectedCustomer && (
             <div className="py-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Full Name</label>
-                  <Input defaultValue={selectedCustomer.fullName} />
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const data = {
+                  fullName: formData.get('fullName') as string,
+                  email: formData.get('email') as string,
+                  phone: formData.get('phone') as string,
+                  address: formData.get('address') as string || null,
+                  driverLicense: formData.get('driverLicense') as string || null,
+                  notes: formData.get('notes') as string || null,
+                };
+                
+                // Here you would typically call an API to update the customer
+                alert("Update customer functionality will be implemented soon");
+                setShowEditDialog(false);
+              }}>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Full Name</label>
+                    <Input name="fullName" defaultValue={selectedCustomer.fullName} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email</label>
+                    <Input name="email" type="email" defaultValue={selectedCustomer.email} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Phone</label>
+                    <Input name="phone" defaultValue={selectedCustomer.phone} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Address</label>
+                    <Input name="address" defaultValue={selectedCustomer.address || ''} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Driver License</label>
+                    <Input name="driverLicense" defaultValue={selectedCustomer.driverLicense || ''} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Notes</label>
+                    <Textarea name="notes" defaultValue={selectedCustomer.notes || ''} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" defaultValue={selectedCustomer.email} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Phone</label>
-                  <Input defaultValue={selectedCustomer.phone} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Address</label>
-                  <Input defaultValue={selectedCustomer.address || ''} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Driver License</label>
-                  <Input defaultValue={selectedCustomer.driverLicense || ''} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Notes</label>
-                  <Textarea defaultValue={selectedCustomer.notes || ''} />
-                </div>
-              </div>
-              
-              <DialogFooter className="mt-6">
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-                <Button type="submit">Update Customer</Button>
-              </DialogFooter>
+                
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+                  <Button type="submit">Update Customer</Button>
+                </DialogFooter>
+              </form>
             </div>
           )}
         </DialogContent>
