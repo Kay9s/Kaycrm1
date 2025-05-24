@@ -245,9 +245,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    // Ensure booking reference is never null by generating one if not provided
+    const bookingWithRef = {
+      ...insertBooking,
+      bookingRef: insertBooking.bookingRef || `BK-${Math.floor(1000 + Math.random() * 9000)}`
+    };
+    
+    // Insert with guaranteed booking reference
     const [booking] = await db
       .insert(bookings)
-      .values(insertBooking)
+      .values(bookingWithRef)
       .returning();
     return booking;
   }

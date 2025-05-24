@@ -97,7 +97,7 @@ router.post('/booking', async (req, res) => {
  * Check vehicle availability for a specific time period
  * This endpoint allows the n8n AI agent to check if a vehicle is available
  */
-router.get('/vehicle-availability', async (req, res) => {
+router.get('/check-availability', async (req, res) => {
   try {
     // Get query parameters
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : null;
