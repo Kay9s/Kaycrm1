@@ -43,6 +43,9 @@ import { Search, Plus, ArrowUpDown, Mail, Phone, User } from "lucide-react";
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const pageSize = 10;
   
   // Fetch customers
