@@ -69,7 +69,7 @@ export default function InvoicesPage() {
   
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [lastInvoiceNumber, setLastInvoiceNumber] = useState(1000);
+  const [lastInvoiceNumber] = useState(1000); // Don't call setLastInvoiceNumber during render
   
   // Fetch customers for dropdown
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
@@ -197,12 +197,21 @@ export default function InvoicesPage() {
       description: `Invoice ${data.invoiceNumber} has been created successfully.`,
     });
     
-    // Increment the invoice number for next time
-    setLastInvoiceNumber(prevNum => prevNum + 1);
+    // Reset the form with new values
+    form.reset({
+      ...form.getValues(),
+      invoiceNumber: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      customerId: "",
+      bookingId: "none",
+      items: [{ description: "", quantity: 1, unitPrice: 0 }]
+    });
     
-    // Set a new invoice number
-    const nextNumber = lastInvoiceNumber + 1;
-    form.setValue("invoiceNumber", `INV-${nextNumber}`);
+    // Reset the invoice items state
+    setInvoiceItems([{ description: "", quantity: 1, unitPrice: 0 }]);
+    
+    // Reset customer and booking selection
+    setSelectedCustomer(null);
+    setSelectedBooking(null);
   };
 
   return (
