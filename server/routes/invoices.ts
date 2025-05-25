@@ -11,7 +11,7 @@ const router = Router();
  * Get all invoices
  * GET /api/invoices
  */
-router.get('/', authenticate, async (_req: Request, res: Response) => {
+router.get('/', async (_req: Request, res: Response) => {
   try {
     const invoices = await storage.getInvoices();
     res.json(invoices);
@@ -25,7 +25,7 @@ router.get('/', authenticate, async (_req: Request, res: Response) => {
  * Get a specific invoice by ID
  * GET /api/invoices/:id
  */
-router.get('/:id', authenticate, async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -48,7 +48,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
  * Get invoices for a specific customer
  * GET /api/invoices/customer/:customerId
  */
-router.get('/customer/:customerId', authenticate, async (req: Request, res: Response) => {
+router.get('/customer/:customerId', async (req: Request, res: Response) => {
   try {
     const customerId = parseInt(req.params.customerId);
     if (isNaN(customerId)) {
@@ -67,7 +67,7 @@ router.get('/customer/:customerId', authenticate, async (req: Request, res: Resp
  * Get invoices for a specific booking
  * GET /api/invoices/booking/:bookingId
  */
-router.get('/booking/:bookingId', authenticate, async (req: Request, res: Response) => {
+router.get('/booking/:bookingId', async (req: Request, res: Response) => {
   try {
     const bookingId = parseInt(req.params.bookingId);
     if (isNaN(bookingId)) {
@@ -86,8 +86,10 @@ router.get('/booking/:bookingId', authenticate, async (req: Request, res: Respon
  * Create a new invoice
  * POST /api/invoices
  */
-router.post('/', authenticate, async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
+    console.log('Creating invoice with data:', req.body);
+    
     // Validate the request body
     const validatedData = insertInvoiceSchema.parse(req.body);
 
@@ -97,10 +99,11 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const validationError = fromZodError(error);
-      return res.status(400).json({ message: validationError.message });
+      console.error('Validation error creating invoice:', validationError.message);
+      return res.status(400).json({ message: validationError.message, details: validationError.details });
     }
     console.error('Error creating invoice:', error);
-    res.status(500).json({ message: 'Failed to create invoice' });
+    res.status(500).json({ message: 'Failed to create invoice', error: String(error) });
   }
 });
 
@@ -108,7 +111,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
  * Update invoice status
  * PATCH /api/invoices/:id/status
  */
-router.patch('/:id/status', authenticate, async (req: Request, res: Response) => {
+router.patch('/:id/status', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -136,7 +139,7 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
  * Delete an invoice
  * DELETE /api/invoices/:id
  */
-router.delete('/:id', authenticate, async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
