@@ -62,12 +62,67 @@ router.post('/booking', async (req, res) => {
       });
     }
     
+    // Parse dates from MM/DD/YYYY format
+    let startDate, endDate;
+    try {
+      // Handle multiple possible date formats from n8n
+      if (bookingData.startDate || bookingData.pickupDate) {
+        const dateString = bookingData.startDate || bookingData.pickupDate;
+        // Handle empty strings
+        if (dateString && dateString.trim() !== '') {
+          // If in MM/DD/YYYY format, parse it properly
+          if (typeof dateString === 'string' && dateString.includes('/')) {
+            const [month, day, year] = dateString.split('/').map(part => parseInt(part));
+            startDate = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
+          } else {
+            startDate = new Date(dateString);
+          }
+        } else {
+          startDate = new Date(); // Default to today if empty
+        }
+      } else {
+        startDate = new Date();
+      }
+      
+      if (bookingData.endDate || bookingData.returnDate) {
+        const dateString = bookingData.endDate || bookingData.returnDate;
+        // Handle empty strings
+        if (dateString && dateString.trim() !== '') {
+          // If in MM/DD/YYYY format, parse it properly
+          if (typeof dateString === 'string' && dateString.includes('/')) {
+            const [month, day, year] = dateString.split('/').map(part => parseInt(part));
+            endDate = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
+          } else {
+            endDate = new Date(dateString);
+          }
+        } else {
+          // Default to 1 day rental if empty
+          endDate = new Date(Date.now() + 86400000);
+        }
+      } else {
+        // Default to 1 day rental
+        endDate = new Date(Date.now() + 86400000);
+      }
+    } catch (dateError) {
+      console.error('Error parsing dates:', dateError);
+      // Fall back to defaults if date parsing fails
+      startDate = new Date();
+      endDate = new Date(Date.now() + 86400000);
+    }
+    
+    console.log('Parsed dates for booking:', { 
+      originalStartDate: bookingData.startDate || bookingData.pickupDate,
+      originalEndDate: bookingData.endDate || bookingData.returnDate,
+      parsedStartDate: startDate, 
+      parsedEndDate: endDate 
+    });
+
     // Create the booking
     const booking = await storage.createBooking({
       customerId: customerId,
       vehicleId: bookingData.vehicleId,
-      startDate: new Date(bookingData.startDate || bookingData.pickupDate || new Date()),
-      endDate: new Date(bookingData.endDate || bookingData.returnDate || new Date(Date.now() + 86400000)), // Default to 1 day rental
+      startDate: startDate,
+      endDate: endDate,
       totalAmount: bookingData.totalAmount || 0,
       status: bookingData.status || 'pending',
       bookingRef: bookingData.bookingRef || `BK-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -76,7 +131,9 @@ router.post('/booking', async (req, res) => {
       notes: bookingData.notes || 'Booking created via n8n integration',
       hasPickupMeeting: bookingData.hasPickupMeeting || false,
       pickupLocation: bookingData.pickupLocation || '',
-      specialRequests: bookingData.specialRequests || ''
+      specialRequests: bookingData.specialRequests || '',
+      // Store the original n8n data for reference
+      n8nWebhookData: bookingData
     });
     
     return res.status(201).json({ 
