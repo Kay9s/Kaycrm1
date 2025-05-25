@@ -215,7 +215,7 @@ export default function PickupMeetings() {
         {!isGoogleConnected && !isLoadingGoogleStatus && (
           <Button 
             variant="outline" 
-            onClick={() => window.location.href = '/api/auth/calendar/url'}
+            onClick={() => window.location.href = '/api/google/auth/calendar/url'}
             className="flex items-center"
           >
             <Calendar className="mr-2 h-4 w-4" />
@@ -507,7 +507,7 @@ export default function PickupMeetings() {
                   <Button 
                     variant="outline" 
                     className="w-full mt-2" 
-                    onClick={() => window.location.href = '/api/auth/calendar/url'}
+                    onClick={() => window.location.href = '/api/google/auth/calendar/url'}
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     Connect Google Calendar

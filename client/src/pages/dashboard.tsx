@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import StatCard from "@/components/dashboard/StatCard";
 import NewStatCard from "@/components/dashboard/NewStatCard";
 import BookingActivityChart from "@/components/dashboard/BookingActivityChart";
+import CarBookingChart from "@/components/dashboard/CarBookingChart";
+import VehicleAvailabilityChart from "@/components/dashboard/VehicleAvailabilityChart";
 import CalendarView from "@/components/dashboard/CalendarView";
 import BookingsTable from "@/components/dashboard/BookingsTable";
 import FleetCategoryChart from "@/components/dashboard/FleetCategoryChart";
@@ -94,19 +96,14 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Order Overview Card */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-5">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Order Overview</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="h-7 px-3 text-xs font-medium rounded-full">Monthly</Button>
-              <Button variant="outline" size="sm" className="h-7 px-3 text-xs font-medium rounded-full bg-primary/10 border-primary/20 text-primary">Yearly</Button>
-            </div>
+      {/* Stats Cards - New layout similar to the Tailux UI */}
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 mb-6">
+        <div className="lg:col-span-6 bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Booking Overview</h3>
           </div>
-
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <NewStatCard
               title="Income"
               value={totalIncome}
@@ -143,86 +140,48 @@ export default function Dashboard() {
               trendDirection="up"
             />
           </div>
-          
-          {/* Chart placeholder - We'll keep the existing chart component */}
-          <div className="h-48">
-            <BookingActivityChart />
-          </div>
+        </div>
+      </div>
+      
+      {/* Booking Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Car Booking Chart */}
+        <div className="lg:col-span-1">
+          <CarBookingChart />
         </div>
         
-        {/* Budget Card */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 p-5">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Budget</h3>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">{yearlyBudget}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">YEARLY BUDGET</span>
-            </div>
-          </div>
-          
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-            You have spent about {budgetSpent} of your annual budget.
-          </p>
-          
-          {/* Bar chart placeholder */}
-          <div className="h-40 mb-6">
-            <div className="flex items-end justify-between h-full">
-              {[0.6, 0.8, 0.5, 0.9, 0.4, 0.7].map((height, i) => (
-                <div key={i} className="relative w-8 rounded-t-md bg-blue-500" style={{ height: `${height * 100}%` }}></div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Income</h4>
-                <button className="text-neutral-400 hover:text-neutral-500">...</button>
-              </div>
-              <p className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{totalIncome2}</p>
-              <div className="h-16 mt-2">
-                <svg viewBox="0 0 100 20" className="w-full h-full">
-                  <path d="M0,10 Q30,5 50,10 T100,10" fill="none" stroke="#22c55e" strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Expense</h4>
-                <button className="text-neutral-400 hover:text-neutral-500">...</button>
-              </div>
-              <p className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{totalExpense}</p>
-              <div className="h-16 mt-2">
-                <svg viewBox="0 0 100 20" className="w-full h-full">
-                  <path d="M0,10 Q30,15 50,10 T100,15" fill="none" stroke="#ef4444" strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
-          </div>
+        {/* Vehicle Availability Chart */}
+        <div className="lg:col-span-1">
+          <VehicleAvailabilityChart />
         </div>
       </div>
       
-      {/* Action Cards */}
+      {/* Calendar View and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <EmergencySupport />
-        <QuickActions />
-        <IntegrationStatus />
-      </div>
-      
-      {/* Charts and Calendar Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <BookingActivityChart />
-        <CalendarView />
+        <div className="lg:col-span-2">
+          <CalendarView />
+        </div>
+        <div className="lg:col-span-1">
+          <QuickActions />
+        </div>
       </div>
       
       {/* Recent Bookings Table */}
-      <BookingsTable />
+      <div className="mb-6">
+        <BookingsTable />
+      </div>
       
-      {/* Fleet Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <FleetCategoryChart />
-        <AvailabilityAlerts />
+      {/* Additional Information */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="md:col-span-1">
+          <EmergencySupport />
+        </div>
+        <div className="md:col-span-1">
+          <FleetCategoryChart />
+        </div>
+        <div className="md:col-span-1">
+          <AvailabilityAlerts />
+        </div>
       </div>
     </div>
   );
