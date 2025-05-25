@@ -90,6 +90,14 @@ export default function Sidebar() {
               active={location === "/invoices"} 
             />
           </li>
+          <li>
+            <NavLink 
+              href="/pickup-meetings" 
+              icon="ri-calendar-check-line" 
+              label="Pickup Meetings" 
+              active={location === "/pickup-meetings"} 
+            />
+          </li>
         </ul>
       </nav>
       

@@ -65,17 +65,21 @@ export default function PickupMeetings() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   
   // Fetch bookings
-  const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
+  const { data: bookings = [], isLoading: isLoadingBookings } = useQuery<any[]>({
     queryKey: ['/api/bookings'],
   });
   
   // Check Google Calendar connection status
-  const { data: googleStatus, isLoading: isLoadingGoogleStatus } = useQuery({
+  const { data: googleStatus, isLoading: isLoadingGoogleStatus } = useQuery<{ connected: boolean }>({
     queryKey: ['/api/google/calendar/test'],
-    onSuccess: (data) => {
-      setIsGoogleConnected(data?.connected || false);
-    }
   });
+  
+  // Update connection status when data changes
+  useEffect(() => {
+    if (googleStatus) {
+      setIsGoogleConnected(googleStatus.connected);
+    }
+  }, [googleStatus]);
 
   // Form setup
   const form = useForm<PickupMeetingFormValues>({
