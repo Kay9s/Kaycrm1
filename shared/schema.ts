@@ -41,11 +41,12 @@ export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   fullName: text("full_name").notNull(),
   email: text("email").notNull().unique(),
-  phone: text("phone").notNull(),
+  phone: text("phone"),
   address: text("address"),
-  driverLicense: text("driver_license").notNull(),
+  driverLicense: text("driver_license"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+  source: text("source"),
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -83,11 +84,12 @@ export const supportTickets = pgTable("support_tickets", {
   customerId: integer("customer_id").notNull(),
   subject: text("subject").notNull(),
   description: text("description").notNull(),
-  status: text("status").notNull().default("open"),
-  priority: text("priority").notNull().default("medium"),
+  status: text("status").default("open"),
+  priority: text("priority").default("medium"),
   createdAt: timestamp("created_at").defaultNow(),
   resolvedAt: timestamp("resolved_at"),
   assignedTo: integer("assigned_to"),
+  attachments: text("attachments"),
 });
 
 export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({

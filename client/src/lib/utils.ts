@@ -16,9 +16,18 @@ export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   });
+}
+
+// For form inputs that need MM/DD/YYYY format
+export function formatDateForInput(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${month}/${day}/${year}`;
 }
 
 export function getInitials(name: string): string {

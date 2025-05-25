@@ -117,12 +117,16 @@ router.post('/booking', async (req, res) => {
       parsedEndDate: endDate 
     });
 
+    // Convert dates to strings in ISO format for database storage
+    const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
+    const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
+    
     // Create the booking
     const booking = await storage.createBooking({
       customerId: customerId,
       vehicleId: bookingData.vehicleId,
-      startDate: startDate,
-      endDate: endDate,
+      startDate: startDateString,
+      endDate: endDateString,
       totalAmount: bookingData.totalAmount || 0,
       status: bookingData.status || 'pending',
       bookingRef: bookingData.bookingRef || `BK-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -233,7 +237,7 @@ router.post('/schedule-pickup', async (req, res) => {
     }
     
     // Update the booking with pickup meeting details
-    const updatedBooking = await storage.updateBookingStatus(booking.id, booking.status);
+    const updatedBooking = await storage.updateBookingStatus(booking.id, booking.status || 'pending');
     
     // Create a support ticket for the pickup meeting
     const supportTicket = await storage.createSupportTicket({
@@ -243,8 +247,7 @@ router.post('/schedule-pickup', async (req, res) => {
       status: 'open',
       priority: 'medium',
       bookingId: booking.id,
-      assignedTo: null,
-      attachments: null
+      assignedTo: null
     });
     
     return res.status(200).json({
