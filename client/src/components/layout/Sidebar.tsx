@@ -98,6 +98,14 @@ export default function Sidebar() {
               active={location === "/pickup-meetings"} 
             />
           </li>
+          <li>
+            <NavLink 
+              href="/n8n-calls" 
+              icon="ri-phone-line" 
+              label="n8n Call Data" 
+              active={location === "/n8n-calls"} 
+            />
+          </li>
         </ul>
       </nav>
       

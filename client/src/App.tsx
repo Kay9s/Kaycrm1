@@ -14,6 +14,7 @@ import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import InvoicesPage from "@/pages/InvoicesPage";
 import PickupMeetings from "@/pages/pickup-meetings";
+import N8nCalls from "@/pages/n8n-calls";
 import Login from "@/pages/login";
 import TestLogin from "@/pages/TestLogin";
 
@@ -97,6 +98,11 @@ function Router() {
       <Route path="/pickup-meetings" component={() => (
         <AppLayout>
           <PickupMeetings />
+        </AppLayout>
+      )} />
+      <Route path="/n8n-calls" component={() => (
+        <AppLayout>
+          <N8nCalls />
         </AppLayout>
       )} />
       {/* Login page - no AppLayout */}
