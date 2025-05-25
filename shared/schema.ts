@@ -128,19 +128,19 @@ export const supportTicketFormSchema = insertSupportTicketSchema.extend({
 // Invoices
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  invoiceNumber: text("invoice_number").notNull().unique(),
-  invoiceDate: date("invoice_date").notNull(),
-  dueDate: date("due_date").notNull(),
-  customerId: integer("customer_id").notNull().references(() => customers.id),
+  invoiceNumber: text("invoice_number").unique(),
+  invoiceDate: date("invoice_date"),
+  dueDate: date("due_date"),
+  customerId: integer("customer_id").references(() => customers.id),
   bookingId: integer("booking_id").references(() => bookings.id),
-  status: text("status").notNull().default("pending"),
-  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
-  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull(),
-  tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
-  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default("pending"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }),
+  tax: decimal("tax", { precision: 10, scale: 2 }),
+  total: decimal("total", { precision: 10, scale: 2 }),
   notes: text("notes"),
   paymentTerms: text("payment_terms"),
-  items: jsonb("items").notNull(),
+  items: jsonb("items"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -162,18 +162,18 @@ export const invoiceFormSchema = insertInvoiceSchema.extend({
 // N8n Call Data
 export const n8nCalls = pgTable("n8n_calls", {
   id: serial("id").primaryKey(),
-  callerId: text("caller_id").notNull(),
+  callerId: text("caller_id"),
   callerName: text("caller_name"),
-  callerPhone: text("caller_phone").notNull(),
-  callTime: timestamp("call_time").notNull().defaultNow(),
+  callerPhone: text("caller_phone"),
+  callTime: timestamp("call_time").defaultNow(),
   callDuration: integer("call_duration"),
-  status: text("status").notNull().default("new"),  // new, booked, canceled, followup
+  status: text("status").default("new"),  // new, booked, canceled, followup
   reason: text("reason"),
   notes: text("notes"),
   bookingId: integer("booking_id").references(() => bookings.id),
   agentNotes: text("agent_notes"),
   transcription: text("transcription"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
 
