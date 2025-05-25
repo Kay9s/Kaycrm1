@@ -56,7 +56,7 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
 // Bookings
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
-  bookingRef: text("booking_ref").notNull().unique(),
+  bookingRef: text("booking_ref"),
   customerId: integer("customer_id").notNull(),
   vehicleId: integer("vehicle_id").notNull(),
   startDate: date("start_date").notNull(),
