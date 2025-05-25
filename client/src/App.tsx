@@ -12,7 +12,7 @@ import Fleet from "@/pages/fleet";
 import Customers from "@/pages/customers";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
-import Invoices from "@/pages/invoices";
+import InvoicesPage from "@/pages/InvoicesPage";
 import PickupMeetings from "@/pages/pickup-meetings";
 import Login from "@/pages/login";
 import TestLogin from "@/pages/TestLogin";
@@ -91,7 +91,7 @@ function Router() {
       )} />
       <Route path="/invoices" component={() => (
         <AppLayout>
-          <Invoices />
+          <InvoicesPage />
         </AppLayout>
       )} />
       <Route path="/pickup-meetings" component={() => (
