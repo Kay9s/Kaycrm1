@@ -11,7 +11,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Form,
@@ -39,13 +38,9 @@ import {
   PlusCircle, 
   FileText, 
   Save, 
-  Printer, 
   Download, 
   Edit, 
-  Trash2, 
-  Clock, 
-  User, 
-  Calendar
+  Trash2
 } from "lucide-react";
 
 // Define form schema
@@ -97,7 +92,6 @@ export default function InvoicesPage() {
   
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [lastInvoiceNumber] = useState(1000);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   
@@ -115,7 +109,7 @@ export default function InvoicesPage() {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      invoiceNumber: `INV-${lastInvoiceNumber + 1}`,
+      invoiceNumber: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
       invoiceDate: format(new Date(), "yyyy-MM-dd"),
       dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
       customerId: "",
@@ -256,30 +250,112 @@ export default function InvoicesPage() {
       const jsPDF = (await import('jspdf')).default;
       const html2canvas = (await import('html2canvas')).default;
       
-      const invoiceElement = document.getElementById(`invoice-preview-${invoice.id}`);
-      if (!invoiceElement) {
-        toast({
-          title: "Error",
-          description: "Could not find invoice element to generate PDF",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Create a temporary container for the invoice preview
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.width = '800px';
+      container.style.background = 'white';
+      container.style.padding = '20px';
+      document.body.appendChild(container);
       
+      // Fill the container with invoice HTML
+      container.innerHTML = `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+            <div>
+              <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 5px 0;">INVOICE</h1>
+              <p style="font-size: 18px; margin: 0;">${invoice.invoiceNumber}</p>
+            </div>
+            <div style="text-align: right;">
+              <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 5px 0;">CarFlow Rental</h2>
+              <p style="margin: 0; font-size: 14px;">123 Business Street</p>
+              <p style="margin: 0; font-size: 14px;">City, State 12345</p>
+              <p style="margin: 0; font-size: 14px;">support@carflowrental.com</p>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+            <div>
+              <h3 style="text-transform: uppercase; font-size: 12px; color: #777; margin: 0 0 10px 0;">Bill To:</h3>
+              <p style="font-weight: 500; margin: 0 0 5px 0;">${invoice.customerDetails?.fullName || 'Customer'}</p>
+              <p style="margin: 0 0 5px 0;">${invoice.customerDetails?.email || ''}</p>
+              <p style="margin: 0 0 5px 0;">${invoice.customerDetails?.phone || ''}</p>
+              ${invoice.customerDetails?.address ? `<p style="margin: 0;">${invoice.customerDetails.address}</p>` : ''}
+            </div>
+            <div style="text-align: right;">
+              <p style="margin: 0 0 5px 0;"><span style="font-size: 12px; text-transform: uppercase; color: #777; font-weight: bold;">Invoice Date:</span> <span>${new Date(invoice.invoiceDate).toLocaleDateString()}</span></p>
+              <p style="margin: 0 0 5px 0;"><span style="font-size: 12px; text-transform: uppercase; color: #777; font-weight: bold;">Due Date:</span> <span>${new Date(invoice.dueDate).toLocaleDateString()}</span></p>
+              <p style="margin: 0;"><span style="font-size: 12px; text-transform: uppercase; color: #777; font-weight: bold;">Status:</span> <span style="font-weight: 500;">${invoice.status.toUpperCase()}</span></p>
+            </div>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #ddd;">
+                <th style="text-align: left; padding: 10px 5px;">Description</th>
+                <th style="text-align: right; padding: 10px 5px;">Quantity</th>
+                <th style="text-align: right; padding: 10px 5px;">Unit Price</th>
+                <th style="text-align: right; padding: 10px 5px;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items.map((item) => `
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 10px 5px;">${item.description}</td>
+                  <td style="text-align: right; padding: 10px 5px;">${item.quantity}</td>
+                  <td style="text-align: right; padding: 10px 5px;">$${item.unitPrice.toFixed(2)}</td>
+                  <td style="text-align: right; padding: 10px 5px;">$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div style="display: flex; justify-content: flex-end;">
+            <div style="width: 33%;">
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: 500;">Subtotal:</span>
+                <span>$${invoice.subtotal.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: 500;">Tax (${invoice.taxRate}%):</span>
+                <span>$${invoice.tax.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; font-size: 18px;">
+                <span>Total:</span>
+                <span>$${invoice.total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h3 style="font-weight: bold; margin: 0 0 10px 0;">Notes:</h3>
+            <p style="margin: 0 0 20px 0;">${invoice.notes}</p>
+            <p style="text-align: center; font-size: 14px; color: #777;">Thank you for your business!</p>
+          </div>
+        </div>
+      `;
+      
+      // Show loading toast
       toast({
         title: "Generating PDF",
         description: "Please wait while we prepare your invoice PDF...",
       });
       
-      // Create a snapshot of the invoice container
-      const canvas = await html2canvas(invoiceElement, {
+      // Create canvas from the container
+      const canvas = await html2canvas(container, {
         scale: 2,
-        useCORS: true,
         logging: false,
+        useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff"
       });
       
+      // Remove the temporary container
+      document.body.removeChild(container);
+      
+      // Create PDF from canvas
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -288,7 +364,7 @@ export default function InvoicesPage() {
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30;
+      const imgY = 10;
       
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`invoice-${invoice.invoiceNumber}.pdf`);
@@ -1086,98 +1162,6 @@ export default function InvoicesPage() {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      {/* Invoice Preview for PDF Generation - Hidden until needed */}
-      <div className="hidden">
-        {invoices.map(invoice => (
-          <div 
-            key={invoice.id} 
-            id={`invoice-preview-${invoice.id}`} 
-            className="bg-white p-8 max-w-[800px] mx-auto"
-          >
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h1 className="text-3xl font-bold mb-1">INVOICE</h1>
-                <p className="text-xl font-medium">{invoice.invoiceNumber}</p>
-              </div>
-              <div className="text-right">
-                <h2 className="text-xl font-bold mb-1">CarFlow Rental</h2>
-                <p className="text-sm">123 Business Street</p>
-                <p className="text-sm">City, State 12345</p>
-                <p className="text-sm">support@carflowrental.com</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-between mb-8">
-              <div>
-                <h3 className="text-sm font-bold uppercase text-neutral-500 mb-2">Bill To:</h3>
-                <p className="font-medium">{invoice.customerDetails?.fullName || 'Customer'}</p>
-                <p>{invoice.customerDetails?.email || ''}</p>
-                <p>{invoice.customerDetails?.phone || ''}</p>
-                {invoice.customerDetails?.address && <p>{invoice.customerDetails.address}</p>}
-              </div>
-              <div className="text-right">
-                <div className="mb-2">
-                  <span className="text-sm font-bold uppercase text-neutral-500">Invoice Date:</span>
-                  <span className="ml-2">{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
-                </div>
-                <div className="mb-2">
-                  <span className="text-sm font-bold uppercase text-neutral-500">Due Date:</span>
-                  <span className="ml-2">{new Date(invoice.dueDate).toLocaleDateString()}</span>
-                </div>
-                <div className="mb-2">
-                  <span className="text-sm font-bold uppercase text-neutral-500">Status:</span>
-                  <span className="ml-2 font-medium">{invoice.status.toUpperCase()}</span>
-                </div>
-              </div>
-            </div>
-            
-            <table className="w-full mb-8">
-              <thead>
-                <tr className="border-b-2 border-neutral-300">
-                  <th className="text-left py-2">Description</th>
-                  <th className="text-right py-2">Quantity</th>
-                  <th className="text-right py-2">Unit Price</th>
-                  <th className="text-right py-2">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.items.map((item, idx) => (
-                  <tr key={idx} className="border-b border-neutral-200">
-                    <td className="py-3">{item.description}</td>
-                    <td className="py-3 text-right">{item.quantity}</td>
-                    <td className="py-3 text-right">${item.unitPrice.toFixed(2)}</td>
-                    <td className="py-3 text-right">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            <div className="flex justify-end">
-              <div className="w-1/3">
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="font-medium">Subtotal:</span>
-                  <span>${invoice.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="font-medium">Tax ({invoice.taxRate}%):</span>
-                  <span>${invoice.tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 font-bold text-lg">
-                  <span>Total:</span>
-                  <span>${invoice.total.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-8 pt-8 border-t border-neutral-200">
-              <h3 className="font-bold mb-2">Notes:</h3>
-              <p>{invoice.notes}</p>
-              <p className="mt-4 text-center text-sm text-neutral-500">Thank you for your business!</p>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
