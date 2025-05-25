@@ -70,6 +70,9 @@ export const bookings = pgTable("bookings", {
   source: text("source").default("direct"),
   googleCalendarEventId: text("google_calendar_event_id"),
   n8nWebhookData: json("n8n_webhook_data"),
+  hasPickupMeeting: boolean("has_pickup_meeting").default(false),
+  pickupLocation: text("pickup_location"),
+  specialRequests: text("special_requests"),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
