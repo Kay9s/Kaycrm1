@@ -169,7 +169,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  * Update an invoice
  * PATCH /api/invoices/:id
  */
-router.patch('/:id', authenticate, async (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
