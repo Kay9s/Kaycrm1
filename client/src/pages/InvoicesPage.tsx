@@ -598,7 +598,7 @@ export default function InvoicesPage() {
                             <td className="py-3 px-4">{invoice.invoiceNumber}</td>
                             <td className="py-3 px-4">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                             <td className="py-3 px-4">{customer?.fullName || 'Unknown'}</td>
-                            <td className="py-3 px-4 text-right">${invoice.total?.toFixed(2)}</td>
+                            <td className="py-3 px-4 text-right">${typeof invoice.total === 'number' ? invoice.total.toFixed(2) : parseFloat(String(invoice.total)).toFixed(2)}</td>
                             <td className="py-3 px-4 text-center">
                               <Badge 
                                 variant={
