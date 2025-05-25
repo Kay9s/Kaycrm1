@@ -150,11 +150,27 @@ export const invoices = pgTable("invoices", {
   updatedAt: timestamp("updated_at"),
 });
 
-export const insertInvoiceSchema = createInsertSchema(invoices).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertInvoiceSchema = createInsertSchema(invoices)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    // Allow numbers or strings for numeric fields
+    subtotal: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseFloat(val) : val
+    ),
+    taxRate: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseFloat(val) : val
+    ),
+    tax: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseFloat(val) : val
+    ),
+    total: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseFloat(val) : val
+    ),
+  });
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
