@@ -3,7 +3,8 @@ import {
   vehicles, type Vehicle, type InsertVehicle,
   customers, type Customer, type InsertCustomer,
   bookings, type Booking, type InsertBooking,
-  supportTickets, type SupportTicket, type InsertSupportTicket
+  supportTickets, type SupportTicket, type InsertSupportTicket,
+  invoices, type Invoice, type InsertInvoice
 } from "@shared/schema";
 import { db } from './db';
 import { eq, and, or, gte, lte, desc, isNull, sql } from 'drizzle-orm';
@@ -48,6 +49,15 @@ export interface IStorage {
   getSupportTickets(): Promise<SupportTicket[]>;
   createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
   updateSupportTicketStatus(id: number, status: string): Promise<SupportTicket | undefined>;
+  
+  // Invoices
+  getInvoice(id: number): Promise<Invoice | undefined>;
+  getInvoiceByNumber(invoiceNumber: string): Promise<Invoice | undefined>;
+  getInvoices(): Promise<Invoice[]>;
+  getInvoicesByCustomer(customerId: number): Promise<Invoice[]>;
+  getInvoicesByBooking(bookingId: number): Promise<Invoice[]>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoiceStatus(id: number, status: string): Promise<Invoice | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {

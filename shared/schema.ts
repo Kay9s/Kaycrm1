@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, date, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date, json, numeric, jsonb, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -123,4 +123,38 @@ export const bookingFormSchema = insertBookingSchema.extend({
 
 export const supportTicketFormSchema = insertSupportTicketSchema.extend({
   customerName: z.string().min(1, "Customer name is required"),
+});
+
+// Invoices
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  invoiceDate: date("invoice_date").notNull(),
+  dueDate: date("due_date").notNull(),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  status: text("status").notNull().default("pending"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  paymentTerms: text("payment_terms"),
+  items: jsonb("items").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+
+export const invoiceFormSchema = insertInvoiceSchema.extend({
+  customerName: z.string().min(1, "Customer name is required"),
+  bookingRef: z.string().optional(),
 });
