@@ -57,7 +57,9 @@ export interface IStorage {
   getInvoicesByCustomer(customerId: number): Promise<Invoice[]>;
   getInvoicesByBooking(bookingId: number): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: number, invoice: InsertInvoice): Promise<Invoice | undefined>;
   updateInvoiceStatus(id: number, status: string): Promise<Invoice | undefined>;
+  deleteInvoice(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -432,6 +434,18 @@ export class DatabaseStorage implements IStorage {
     return invoice;
   }
 
+  async updateInvoice(id: number, invoiceData: InsertInvoice): Promise<Invoice | undefined> {
+    const [invoice] = await db
+      .update(invoices)
+      .set({ 
+        ...invoiceData,
+        updatedAt: new Date() 
+      })
+      .where(eq(invoices.id, id))
+      .returning();
+    return invoice || undefined;
+  }
+
   async updateInvoiceStatus(id: number, status: string): Promise<Invoice | undefined> {
     const [invoice] = await db
       .update(invoices)
@@ -442,6 +456,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(invoices.id, id))
       .returning();
     return invoice || undefined;
+  }
+  
+  async deleteInvoice(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(invoices)
+        .where(eq(invoices.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      return false;
+    }
   }
 }
 

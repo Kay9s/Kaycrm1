@@ -132,4 +132,85 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
   }
 });
 
+/**
+ * Delete an invoice
+ * DELETE /api/invoices/:id
+ */
+router.delete('/:id', authenticate, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
+
+    // Check if invoice exists
+    const invoice = await storage.getInvoice(id);
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Delete the invoice
+    const deleted = await storage.deleteInvoice(id);
+    if (!deleted) {
+      return res.status(500).json({ message: 'Failed to delete invoice' });
+    }
+
+    res.json({ message: 'Invoice deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting invoice:', error);
+    res.status(500).json({ message: 'Failed to delete invoice' });
+  }
+});
+
+/**
+ * Update an invoice
+ * PATCH /api/invoices/:id
+ */
+router.patch('/:id', authenticate, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
+
+    // Get the existing invoice
+    const existingInvoice = await storage.getInvoice(id);
+    if (!existingInvoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Update the invoice with new data
+    try {
+      const validatedData = insertInvoiceSchema.parse({
+        ...existingInvoice,
+        ...req.body,
+        id: undefined, // Ensure ID isn't changed
+        createdAt: undefined, // Don't change created date
+      });
+
+      // If we have items as a string in the request body (JSON stringified), parse it
+      if (req.body.items && typeof req.body.items === 'string') {
+        try {
+          JSON.parse(req.body.items);
+        } catch (e) {
+          return res.status(400).json({ message: 'Invalid items format' });
+        }
+      }
+
+      // Handle updating the invoice
+      const result = await storage.updateInvoice(id, validatedData);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error updating invoice:', error);
+    res.status(500).json({ message: 'Failed to update invoice' });
+  }
+});
+
 export default router;
