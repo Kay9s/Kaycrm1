@@ -4,7 +4,8 @@ import {
   customers, type Customer, type InsertCustomer,
   bookings, type Booking, type InsertBooking,
   supportTickets, type SupportTicket, type InsertSupportTicket,
-  invoices, type Invoice, type InsertInvoice
+  invoices, type Invoice, type InsertInvoice,
+  n8nCalls, type N8nCall, type InsertN8nCall
 } from "@shared/schema";
 import { db } from './db';
 import { eq, and, or, gte, lte, desc, isNull, sql } from 'drizzle-orm';
@@ -60,6 +61,14 @@ export interface IStorage {
   updateInvoice(id: number, invoice: InsertInvoice): Promise<Invoice | undefined>;
   updateInvoiceStatus(id: number, status: string): Promise<Invoice | undefined>;
   deleteInvoice(id: number): Promise<boolean>;
+  
+  // N8n Call Data
+  getN8nCall(id: number): Promise<N8nCall | undefined>;
+  getN8nCalls(): Promise<N8nCall[]>;
+  getN8nCallsByStatus(status: string): Promise<N8nCall[]>;
+  createN8nCall(call: InsertN8nCall): Promise<N8nCall>;
+  updateN8nCall(id: number, call: Partial<InsertN8nCall>): Promise<N8nCall | undefined>;
+  deleteN8nCall(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -468,6 +477,58 @@ export class DatabaseStorage implements IStorage {
       return result.length > 0;
     } catch (error) {
       console.error('Error deleting invoice:', error);
+      return false;
+    }
+  }
+  
+  // N8n Call Data Methods
+  async getN8nCall(id: number): Promise<N8nCall | undefined> {
+    const [call] = await db.select().from(n8nCalls).where(eq(n8nCalls.id, id));
+    return call || undefined;
+  }
+
+  async getN8nCalls(): Promise<N8nCall[]> {
+    return db.select().from(n8nCalls).orderBy(desc(n8nCalls.callTime));
+  }
+
+  async getN8nCallsByStatus(status: string): Promise<N8nCall[]> {
+    return db
+      .select()
+      .from(n8nCalls)
+      .where(eq(n8nCalls.status, status))
+      .orderBy(desc(n8nCalls.callTime));
+  }
+
+  async createN8nCall(call: InsertN8nCall): Promise<N8nCall> {
+    const [createdCall] = await db
+      .insert(n8nCalls)
+      .values(call)
+      .returning();
+    return createdCall;
+  }
+
+  async updateN8nCall(id: number, call: Partial<InsertN8nCall>): Promise<N8nCall | undefined> {
+    const [updatedCall] = await db
+      .update(n8nCalls)
+      .set({ 
+        ...call,
+        updatedAt: new Date() 
+      })
+      .where(eq(n8nCalls.id, id))
+      .returning();
+    return updatedCall || undefined;
+  }
+
+  async deleteN8nCall(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(n8nCalls)
+        .where(eq(n8nCalls.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting n8n call:', error);
       return false;
     }
   }

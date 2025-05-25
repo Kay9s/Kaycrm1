@@ -10,6 +10,7 @@ import googleRoutes from './routes/google';
 import webhookRoutes from './routes/webhooks'; 
 import calendarRoutes from './routes/calendar';
 import invoiceRoutes from './routes/invoices';
+import n8nCallRoutes from './routes/n8nCalls';
 import { authenticate, requireAdmin } from './middleware/auth';
 import * as authService from './services/auth';
 
@@ -35,6 +36,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register invoice routes
   app.use('/api/invoices', invoiceRoutes);
+  
+  // Register n8n call data routes
+  app.use('/api/n8n-calls', n8nCallRoutes);
 
   // Error handler helper
   const handleZodError = (err: unknown, res: Response) => {

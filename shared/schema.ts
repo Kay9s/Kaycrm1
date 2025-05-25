@@ -158,3 +158,30 @@ export const invoiceFormSchema = insertInvoiceSchema.extend({
   customerName: z.string().min(1, "Customer name is required"),
   bookingRef: z.string().optional(),
 });
+
+// N8n Call Data
+export const n8nCalls = pgTable("n8n_calls", {
+  id: serial("id").primaryKey(),
+  callerId: text("caller_id").notNull(),
+  callerName: text("caller_name"),
+  callerPhone: text("caller_phone").notNull(),
+  callTime: timestamp("call_time").notNull().defaultNow(),
+  callDuration: integer("call_duration"),
+  status: text("status").notNull().default("new"),  // new, booked, canceled, followup
+  reason: text("reason"),
+  notes: text("notes"),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  agentNotes: text("agent_notes"),
+  transcription: text("transcription"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const insertN8nCallSchema = createInsertSchema(n8nCalls).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertN8nCall = z.infer<typeof insertN8nCallSchema>;
+export type N8nCall = typeof n8nCalls.$inferSelect;
