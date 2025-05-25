@@ -71,13 +71,6 @@ export default function InvoicesPage() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [lastInvoiceNumber, setLastInvoiceNumber] = useState(1000);
   
-  // Generate a random invoice number
-  const generateInvoiceNumber = () => {
-    const newNumber = lastInvoiceNumber + 1;
-    setLastInvoiceNumber(newNumber);
-    return `INV-${newNumber}`;
-  };
-  
   // Fetch customers for dropdown
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ['/api/customers'],
@@ -92,10 +85,11 @@ export default function InvoicesPage() {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      invoiceNumber: generateInvoiceNumber(),
+      invoiceNumber: `INV-${lastInvoiceNumber + 1}`,
       invoiceDate: format(new Date(), "yyyy-MM-dd"),
       dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
       customerId: "",
+      bookingId: "none",
       items: [{ description: "", quantity: 1, unitPrice: 0 }],
       notes: "Thank you for your business!",
       paymentTerms: "Net 30",
@@ -149,14 +143,22 @@ export default function InvoicesPage() {
   // Handle customer selection
   const handleCustomerChange = (customerId: string) => {
     form.setValue("customerId", customerId);
-    const customer = customers?.find((c: any) => c.id.toString() === customerId);
+    const customer = Array.isArray(customers) ? 
+      customers.find((c: any) => c.id.toString() === customerId) : null;
     setSelectedCustomer(customer);
   };
   
   // Handle booking selection
   const handleBookingChange = (bookingId: string) => {
     form.setValue("bookingId", bookingId);
-    const booking = bookings?.find((b: any) => b.id.toString() === bookingId);
+    
+    if (bookingId === "none") {
+      setSelectedBooking(null);
+      return;
+    }
+    
+    const booking = Array.isArray(bookings) ? 
+      bookings.find((b: any) => b.id.toString() === bookingId) : null;
     setSelectedBooking(booking);
     
     if (booking) {
@@ -195,8 +197,12 @@ export default function InvoicesPage() {
       description: `Invoice ${data.invoiceNumber} has been created successfully.`,
     });
     
-    // Generate a new invoice number for the next invoice
-    form.setValue("invoiceNumber", generateInvoiceNumber());
+    // Increment the invoice number for next time
+    setLastInvoiceNumber(prevNum => prevNum + 1);
+    
+    // Set a new invoice number
+    const nextNumber = lastInvoiceNumber + 1;
+    form.setValue("invoiceNumber", `INV-${nextNumber}`);
   };
 
   return (
@@ -284,11 +290,11 @@ export default function InvoicesPage() {
                           {isLoadingCustomers ? (
                             <SelectItem value="loading">Loading customers...</SelectItem>
                           ) : (
-                            customers?.map((customer: any) => (
+                            Array.isArray(customers) ? customers.map((customer: any) => (
                               <SelectItem key={customer.id} value={customer.id.toString()}>
                                 {customer.fullName}
                               </SelectItem>
-                            ))
+                            )) : null
                           )}
                         </SelectContent>
                       </Select>
@@ -314,17 +320,19 @@ export default function InvoicesPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {isLoadingBookings ? (
                             <SelectItem value="loading">Loading bookings...</SelectItem>
                           ) : (
-                            bookings?.filter((booking: any) => 
-                              selectedCustomer && booking.customerId === selectedCustomer.id
-                            ).map((booking: any) => (
-                              <SelectItem key={booking.id} value={booking.id.toString()}>
-                                {booking.bookingRef} - {new Date(booking.startDate).toLocaleDateString()}
-                              </SelectItem>
-                            ))
+                            Array.isArray(bookings) && selectedCustomer ? 
+                              bookings
+                                .filter((booking: any) => booking.customerId === selectedCustomer.id)
+                                .map((booking: any) => (
+                                  <SelectItem key={booking.id} value={booking.id.toString()}>
+                                    {booking.bookingRef} - {new Date(booking.startDate).toLocaleDateString()}
+                                  </SelectItem>
+                                ))
+                              : null
                           )}
                         </SelectContent>
                       </Select>
