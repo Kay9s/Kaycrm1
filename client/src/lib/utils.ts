@@ -14,20 +14,20 @@ export function formatCurrency(amount: number): string {
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   });
 }
 
-// For form inputs that need MM/DD/YYYY format
+// For form inputs that need DD/MM/YYYY format
 export function formatDateForInput(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  return `${month}/${day}/${year}`;
+  return `${day}/${month}/${year}`;
 }
 
 export function getInitials(name: string): string {

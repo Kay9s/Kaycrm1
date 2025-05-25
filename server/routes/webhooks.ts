@@ -70,9 +70,9 @@ router.post('/booking', async (req, res) => {
         const dateString = bookingData.startDate || bookingData.pickupDate;
         // Handle empty strings
         if (dateString && dateString.trim() !== '') {
-          // If in MM/DD/YYYY format, parse it properly
+          // If in DD/MM/YYYY format, parse it properly
           if (typeof dateString === 'string' && dateString.includes('/')) {
-            const [month, day, year] = dateString.split('/').map(part => parseInt(part));
+            const [day, month, year] = dateString.split('/').map(part => parseInt(part));
             startDate = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
           } else {
             startDate = new Date(dateString);
@@ -88,9 +88,9 @@ router.post('/booking', async (req, res) => {
         const dateString = bookingData.endDate || bookingData.returnDate;
         // Handle empty strings
         if (dateString && dateString.trim() !== '') {
-          // If in MM/DD/YYYY format, parse it properly
+          // If in DD/MM/YYYY format, parse it properly
           if (typeof dateString === 'string' && dateString.includes('/')) {
-            const [month, day, year] = dateString.split('/').map(part => parseInt(part));
+            const [day, month, year] = dateString.split('/').map(part => parseInt(part));
             endDate = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
           } else {
             endDate = new Date(dateString);
