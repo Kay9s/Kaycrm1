@@ -9,6 +9,7 @@ import authRoutes from './routes/auth';
 import googleRoutes from './routes/google';
 import webhookRoutes from './routes/webhooks'; 
 import calendarRoutes from './routes/calendar';
+import invoiceRoutes from './routes/invoices';
 import { authenticate, requireAdmin } from './middleware/auth';
 import * as authService from './services/auth';
 
@@ -31,6 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register calendar routes
   app.use('/api/calendar', calendarRoutes);
+  
+  // Register invoice routes
+  app.use('/api/invoices', invoiceRoutes);
 
   // Error handler helper
   const handleZodError = (err: unknown, res: Response) => {

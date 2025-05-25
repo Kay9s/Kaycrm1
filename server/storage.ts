@@ -392,6 +392,57 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return ticket || undefined;
   }
+
+  // Invoices
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice || undefined;
+  }
+
+  async getInvoiceByNumber(invoiceNumber: string): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.invoiceNumber, invoiceNumber));
+    return invoice || undefined;
+  }
+
+  async getInvoices(): Promise<Invoice[]> {
+    return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoicesByCustomer(customerId: number): Promise<Invoice[]> {
+    return db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.customerId, customerId))
+      .orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoicesByBooking(bookingId: number): Promise<Invoice[]> {
+    return db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.bookingId, bookingId))
+      .orderBy(desc(invoices.createdAt));
+  }
+
+  async createInvoice(insertInvoice: InsertInvoice): Promise<Invoice> {
+    const [invoice] = await db
+      .insert(invoices)
+      .values(insertInvoice)
+      .returning();
+    return invoice;
+  }
+
+  async updateInvoiceStatus(id: number, status: string): Promise<Invoice | undefined> {
+    const [invoice] = await db
+      .update(invoices)
+      .set({ 
+        status, 
+        updatedAt: new Date() 
+      })
+      .where(eq(invoices.id, id))
+      .returning();
+    return invoice || undefined;
+  }
 }
 
 // Use the DatabaseStorage instead of MemStorage
