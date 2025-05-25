@@ -82,6 +82,14 @@ export default function Sidebar() {
               active={location === "/reports"} 
             />
           </li>
+          <li>
+            <NavLink 
+              href="/invoices" 
+              icon="ri-file-list-3-line" 
+              label="Invoices" 
+              active={location === "/invoices"} 
+            />
+          </li>
         </ul>
       </nav>
       
