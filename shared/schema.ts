@@ -30,6 +30,11 @@ export const vehicles = pgTable("vehicles", {
   maintenanceStatus: text("maintenance_status").default("ok"),
   imageUrl: text("image_url"),
   dailyRate: integer("daily_rate").notNull(),
+  // Availability tracking
+  isAvailable: boolean("is_available").default(true),
+  currentBookingStartDate: date("current_booking_start_date"),
+  currentBookingEndDate: date("current_booking_end_date"),
+  currentBookingId: integer("current_booking_id"),
 });
 
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({

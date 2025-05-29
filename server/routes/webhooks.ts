@@ -161,41 +161,57 @@ router.post('/booking', async (req, res) => {
 router.get('/check-availability', async (req, res) => {
   try {
     // Get query parameters
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : null;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : null;
+    const startDateParam = req.query.startDate as string;
+    const endDateParam = req.query.endDate as string;
     const vehicleId = req.query.vehicleId ? parseInt(req.query.vehicleId as string) : null;
     const category = req.query.category as string;
     
-    if (!startDate || !endDate) {
+    if (!startDateParam || !endDateParam) {
       return res.status(400).json({
         success: false,
-        message: 'Both startDate and endDate are required'
+        message: 'Both startDate and endDate are required in YYYY-MM-DD format'
       });
-    }
-    
-    let availableVehicles = await storage.getAvailableVehicles(startDate, endDate);
-    
-    // Filter by category if provided
-    if (category) {
-      availableVehicles = availableVehicles.filter(v => v.category === category);
     }
     
     // Check specific vehicle if vehicleId is provided
     if (vehicleId) {
-      const isAvailable = availableVehicles.some(v => v.id === vehicleId);
+      const isAvailable = await storage.checkVehicleAvailability(vehicleId, startDateParam, endDateParam);
+      const vehicleStatus = await storage.getVehicleAvailabilityStatus(vehicleId);
+      
       return res.status(200).json({
         success: true,
         available: isAvailable,
         message: isAvailable ? 'Vehicle is available for the requested period' : 'Vehicle is not available for the requested period',
-        vehicle: isAvailable ? availableVehicles.find(v => v.id === vehicleId) : null
+        vehicleId,
+        availabilityStatus: vehicleStatus
       });
+    }
+    
+    // Get all vehicles and check their availability
+    const allVehicles = await storage.getVehicles();
+    const availableVehicles = [];
+    
+    for (const vehicle of allVehicles) {
+      const isAvailable = await storage.checkVehicleAvailability(vehicle.id, startDateParam, endDateParam);
+      
+      if (isAvailable) {
+        // Filter by category if provided
+        if (!category || vehicle.category === category) {
+          availableVehicles.push(vehicle);
+        }
+      }
     }
     
     return res.status(200).json({
       success: true,
       availableVehicles,
       count: availableVehicles.length,
-      message: availableVehicles.length > 0 ? 'Available vehicles found' : 'No vehicles available for the requested period'
+      message: availableVehicles.length > 0 ? 'Available vehicles found' : 'No vehicles available for the requested period',
+      requestedPeriod: {
+        startDate: startDateParam,
+        endDate: endDateParam,
+        category: category || 'all'
+      }
     });
   } catch (error: any) {
     console.error('Error checking vehicle availability:', error);

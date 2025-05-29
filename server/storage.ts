@@ -69,6 +69,11 @@ export interface IStorage {
   createN8nCall(call: InsertN8nCall): Promise<N8nCall>;
   updateN8nCall(id: number, call: Partial<InsertN8nCall>): Promise<N8nCall | undefined>;
   deleteN8nCall(id: number): Promise<boolean>;
+  
+  // Vehicle Availability Management
+  updateVehicleAvailability(vehicleId: number, startDate: string, endDate: string, bookingId: number, isAvailable: boolean): Promise<void>;
+  checkVehicleAvailability(vehicleId: number, startDate: string, endDate: string): Promise<boolean>;
+  getVehicleAvailabilityStatus(vehicleId: number): Promise<{ isAvailable: boolean; currentBooking?: any }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -277,6 +282,12 @@ export class DatabaseStorage implements IStorage {
       .insert(bookings)
       .values(bookingWithRef)
       .returning();
+    
+    // Update vehicle availability when booking is created
+    if (booking.vehicleId && booking.startDate && booking.endDate) {
+      await this.updateVehicleAvailability(booking.vehicleId, booking.startDate, booking.endDate, booking.id, false);
+    }
+    
     return booking;
   }
 
@@ -530,6 +541,83 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting n8n call:', error);
       return false;
+    }
+  }
+
+  // Vehicle Availability Management
+  async updateVehicleAvailability(vehicleId: number, startDate: string, endDate: string, bookingId: number, isAvailable: boolean): Promise<void> {
+    try {
+      await db
+        .update(vehicles)
+        .set({
+          isAvailable,
+          currentBookingStartDate: isAvailable ? null : startDate,
+          currentBookingEndDate: isAvailable ? null : endDate,
+          currentBookingId: isAvailable ? null : bookingId,
+        })
+        .where(eq(vehicles.id, vehicleId));
+    } catch (error) {
+      console.error('Error updating vehicle availability:', error);
+      throw error;
+    }
+  }
+
+  async checkVehicleAvailability(vehicleId: number, startDate: string, endDate: string): Promise<boolean> {
+    try {
+      // Get the vehicle's current availability status
+      const [vehicle] = await db
+        .select()
+        .from(vehicles)
+        .where(eq(vehicles.id, vehicleId));
+
+      if (!vehicle) {
+        return false; // Vehicle doesn't exist
+      }
+
+      // If vehicle is not available, check if the dates conflict
+      if (!vehicle.isAvailable && vehicle.currentBookingStartDate && vehicle.currentBookingEndDate) {
+        const requestedStart = new Date(startDate);
+        const requestedEnd = new Date(endDate);
+        const bookedStart = new Date(vehicle.currentBookingStartDate);
+        const bookedEnd = new Date(vehicle.currentBookingEndDate);
+
+        // Check if the requested dates overlap with current booking
+        const hasOverlap = requestedStart <= bookedEnd && requestedEnd >= bookedStart;
+        
+        return !hasOverlap; // Available if no overlap
+      }
+
+      // Vehicle is available or no current booking
+      return vehicle.isAvailable;
+    } catch (error) {
+      console.error('Error checking vehicle availability:', error);
+      return false;
+    }
+  }
+
+  async getVehicleAvailabilityStatus(vehicleId: number): Promise<{ isAvailable: boolean; currentBooking?: any }> {
+    try {
+      const [vehicle] = await db
+        .select()
+        .from(vehicles)
+        .where(eq(vehicles.id, vehicleId));
+
+      if (!vehicle) {
+        return { isAvailable: false };
+      }
+
+      let currentBooking = null;
+      if (vehicle.currentBookingId) {
+        currentBooking = await this.getBooking(vehicle.currentBookingId);
+      }
+
+      return {
+        isAvailable: vehicle.isAvailable,
+        currentBooking
+      };
+    } catch (error) {
+      console.error('Error getting vehicle availability status:', error);
+      return { isAvailable: false };
     }
   }
 }
