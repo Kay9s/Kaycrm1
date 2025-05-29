@@ -147,9 +147,9 @@ export class DatabaseStorage implements IStorage {
     }
     
     return db.select().from(vehicles).where(
-      or(
+      and(
         sql`${vehicles.id} NOT IN (${vehicleIdsToExclude.join(',')})`,
-        eq(vehicles.status, 'available')
+        eq(vehicles.isAvailable, true)
       )
     );
   }
