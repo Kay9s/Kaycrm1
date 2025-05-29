@@ -293,6 +293,68 @@ router.get('/test', (req, res) => {
 });
 
 /**
+ * Update vehicle availability status
+ * This endpoint allows updating vehicle availability when bookings are cancelled or completed
+ */
+router.post('/update-vehicle-availability', async (req, res) => {
+  try {
+    const { vehicleId, isAvailable, bookingId } = req.body;
+    
+    if (!vehicleId) {
+      return res.status(400).json({
+        success: false,
+        message: 'vehicleId is required'
+      });
+    }
+    
+    if (isAvailable) {
+      // Make vehicle available by clearing booking information
+      await storage.updateVehicleAvailability(vehicleId, '', '', 0, true);
+    } else {
+      // If making unavailable, need booking details
+      if (!bookingId) {
+        return res.status(400).json({
+          success: false,
+          message: 'bookingId is required when setting vehicle as unavailable'
+        });
+      }
+      
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: 'Booking not found'
+        });
+      }
+      
+      await storage.updateVehicleAvailability(
+        vehicleId, 
+        booking.startDate || '', 
+        booking.endDate || '', 
+        bookingId, 
+        false
+      );
+    }
+    
+    const vehicleStatus = await storage.getVehicleAvailabilityStatus(vehicleId);
+    
+    return res.status(200).json({
+      success: true,
+      message: `Vehicle availability updated successfully`,
+      vehicleId,
+      isAvailable,
+      availabilityStatus: vehicleStatus
+    });
+  } catch (error: any) {
+    console.error('Error updating vehicle availability:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'An error occurred updating vehicle availability'
+    });
+  }
+});
+
+/**
  * HTTP endpoint to send data to n8n
  * This is an alternative to webhook that can be used to send data to n8n
  */
