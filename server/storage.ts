@@ -5,7 +5,8 @@ import {
   bookings, type Booking, type InsertBooking,
   supportTickets, type SupportTicket, type InsertSupportTicket,
   invoices, type Invoice, type InsertInvoice,
-  n8nCalls, type N8nCall, type InsertN8nCall
+  n8nCalls, type N8nCall, type InsertN8nCall,
+  pricing, type Pricing, type InsertPricing
 } from "@shared/schema";
 import { db } from './db';
 import { eq, and, or, gte, lte, desc, isNull, sql } from 'drizzle-orm';
@@ -625,6 +626,72 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting vehicle availability status:', error);
       return { isAvailable: false };
+    }
+  }
+
+  // Pricing Management
+  async getPricing(vehicleId: number): Promise<Pricing | undefined> {
+    try {
+      const [pricingData] = await db
+        .select()
+        .from(pricing)
+        .where(eq(pricing.vehicleId, vehicleId));
+      return pricingData;
+    } catch (error) {
+      console.error('Error getting pricing:', error);
+      return undefined;
+    }
+  }
+
+  async getAllPricing(): Promise<Pricing[]> {
+    try {
+      return await db.select().from(pricing);
+    } catch (error) {
+      console.error('Error getting all pricing:', error);
+      return [];
+    }
+  }
+
+  async createPricing(pricingData: InsertPricing): Promise<Pricing> {
+    try {
+      const [newPricing] = await db
+        .insert(pricing)
+        .values(pricingData)
+        .returning();
+      return newPricing;
+    } catch (error) {
+      console.error('Error creating pricing:', error);
+      throw error;
+    }
+  }
+
+  async updatePricing(vehicleId: number, pricingData: Partial<InsertPricing>): Promise<Pricing | undefined> {
+    try {
+      const [updatedPricing] = await db
+        .update(pricing)
+        .set({
+          ...pricingData,
+          updatedAt: new Date(),
+        })
+        .where(eq(pricing.vehicleId, vehicleId))
+        .returning();
+      return updatedPricing;
+    } catch (error) {
+      console.error('Error updating pricing:', error);
+      return undefined;
+    }
+  }
+
+  async deletePricing(vehicleId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(pricing)
+        .where(eq(pricing.vehicleId, vehicleId))
+        .returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting pricing:', error);
+      return false;
     }
   }
 }
