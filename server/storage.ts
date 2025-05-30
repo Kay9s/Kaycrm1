@@ -74,6 +74,13 @@ export interface IStorage {
   updateVehicleAvailability(vehicleId: number, startDate: string, endDate: string, bookingId: number, isAvailable: boolean): Promise<void>;
   checkVehicleAvailability(vehicleId: number, startDate: string, endDate: string): Promise<boolean>;
   getVehicleAvailabilityStatus(vehicleId: number): Promise<{ isAvailable: boolean; currentBooking?: any }>;
+  
+  // Pricing Management
+  getPricing(vehicleId: number): Promise<Pricing | undefined>;
+  getAllPricing(): Promise<Pricing[]>;
+  createPricing(pricing: InsertPricing): Promise<Pricing>;
+  updatePricing(vehicleId: number, pricing: Partial<InsertPricing>): Promise<Pricing | undefined>;
+  deletePricing(vehicleId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

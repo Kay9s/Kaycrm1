@@ -30,6 +30,11 @@ export const vehicles = pgTable("vehicles", {
   maintenanceStatus: text("maintenance_status").default("ok"),
   imageUrl: text("image_url"),
   dailyRate: integer("daily_rate").notNull(),
+  transmission: text("transmission"),
+  fuelType: text("fuel_type"),
+  seats: integer("seats"),
+  doors: integer("doors"),
+  features: text("features").array(),
   // Availability tracking
   isAvailable: boolean("is_available").default(true),
   currentBookingStartDate: date("current_booking_start_date"),
@@ -39,6 +44,25 @@ export const vehicles = pgTable("vehicles", {
 
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   id: true,
+});
+
+// Pricing
+export const pricing = pgTable("pricing", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").notNull().references(() => vehicles.id),
+  dailyRate: integer("daily_rate").notNull(),
+  weeklyRate: integer("weekly_rate"),
+  monthlyRate: integer("monthly_rate"),
+  insuranceDaily: integer("insurance_daily"),
+  seasonalMultiplier: decimal("seasonal_multiplier", { precision: 3, scale: 2 }).default("1.00"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPricingSchema = createInsertSchema(pricing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // Customers
@@ -112,6 +136,9 @@ export type User = typeof users.$inferSelect;
 
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
+
+export type InsertPricing = z.infer<typeof insertPricingSchema>;
+export type Pricing = typeof pricing.$inferSelect;
 
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Customer = typeof customers.$inferSelect;
