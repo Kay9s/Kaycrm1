@@ -1,0 +1,150 @@
+// ElevenLabs data processing for car rental booking
+let body = $json.body || $json;
+
+console.log("ElevenLabs request:", JSON.stringify(body, null, 2));
+
+// Extract data from ElevenLabs webhook
+function getParameter(obj, keys) {
+  for (let key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+      return obj[key];
+    }
+  }
+  return null;
+}
+
+let response = {
+  success: false,
+  requestType: "unknown",
+  data: null
+};
+
+try {
+  // ElevenLabs sends action field for tool routing
+  const action = body.action || body.tool_name || body.function_name;
+  const parameters = body.parameters || body.arguments || body.data || body;
+  
+  console.log("Action:", action);
+  console.log("Parameters:", parameters);
+  
+  // Route based on ElevenLabs action
+  if (action === 'get_available_vehicles') {
+    response.requestType = "vehicles";
+    response.filters = {
+      category: getParameter(parameters, ['category', 'vehicle_category']),
+      make: getParameter(parameters, ['make', 'vehicle_make', 'brand']),
+      model: getParameter(parameters, ['model', 'vehicle_model']),
+      year: getParameter(parameters, ['year', 'vehicle_year']),
+      min_year: getParameter(parameters, ['min_year', 'year_from']),
+      max_year: getParameter(parameters, ['max_year', 'year_to'])
+    };
+  }
+  
+  else if (action === 'calculate_rental_price') {
+    response.requestType = "pricing";
+    response.priceQuery = {
+      vehicle_id: getParameter(parameters, ['vehicle_id', 'car_id']),
+      vehicle_make: getParameter(parameters, ['vehicle_make', 'make']),
+      vehicle_model: getParameter(parameters, ['vehicle_model', 'model']),
+      category: getParameter(parameters, ['category', 'vehicle_category']),
+      start_date: getParameter(parameters, ['start_date', 'pickup_date']),
+      end_date: getParameter(parameters, ['end_date', 'return_date']),
+      rental_days: getParameter(parameters, ['rental_days', 'days']),
+      include_insurance: getParameter(parameters, ['include_insurance']) !== false,
+      additional_options: parameters.additional_options || {}
+    };
+  }
+  
+  else if (action === 'create_booking') {
+    response.requestType = "booking";
+    response.bookingData = {
+      customer_name: getParameter(parameters, ['customer_name', 'name']),
+      email: getParameter(parameters, ['email', 'customer_email']),
+      phone: getParameter(parameters, ['phone', 'customer_phone']),
+      driver_license: getParameter(parameters, ['driver_license']),
+      vehicle_id: getParameter(parameters, ['vehicle_id', 'car_id']),
+      vehicle_make: getParameter(parameters, ['vehicle_make', 'make']),
+      vehicle_model: getParameter(parameters, ['vehicle_model', 'model']),
+      start_date: getParameter(parameters, ['start_date', 'pickup_date']),
+      end_date: getParameter(parameters, ['end_date', 'return_date']),
+      pickup_time: getParameter(parameters, ['pickup_time']) || '09:00',
+      return_time: getParameter(parameters, ['return_time']) || '17:00',
+      pickup_location: getParameter(parameters, ['pickup_location']),
+      return_location: getParameter(parameters, ['return_location']),
+      special_requests: getParameter(parameters, ['special_requests', 'notes']),
+      driver_age: getParameter(parameters, ['driver_age']),
+      additional_drivers: getParameter(parameters, ['additional_drivers']),
+      additional_options: parameters.additional_options || {}
+    };
+    
+    // Validate required fields for booking
+    const required = ['customer_name', 'phone', 'start_date', 'end_date'];
+    const missing = required.filter(field => !response.bookingData[field]);
+    
+    if (missing.length > 0) {
+      response.validationErrors = missing;
+      response.message = `Missing required information: ${missing.join(', ')}`;
+    }
+  }
+  
+  else if (action === 'get_booking_details') {
+    response.requestType = "booking_lookup";
+    response.lookupData = {
+      booking_reference: getParameter(parameters, ['booking_reference']),
+      customer_name: getParameter(parameters, ['customer_name']),
+      phone: getParameter(parameters, ['phone'])
+    };
+  }
+  
+  else if (action === 'check_vehicle_availability') {
+    response.requestType = "availability_check";
+    response.availabilityQuery = {
+      vehicle_ids: parameters.vehicle_ids || [],
+      start_date: getParameter(parameters, ['start_date']),
+      end_date: getParameter(parameters, ['end_date']),
+      category: getParameter(parameters, ['category'])
+    };
+  }
+  
+  else if (action === 'modify_booking') {
+    response.requestType = "booking_modification";
+    response.modificationData = {
+      booking_reference: getParameter(parameters, ['booking_reference']),
+      customer_name: getParameter(parameters, ['customer_name']),
+      phone: getParameter(parameters, ['phone']),
+      new_start_date: getParameter(parameters, ['new_start_date']),
+      new_end_date: getParameter(parameters, ['new_end_date']),
+      new_vehicle_id: getParameter(parameters, ['new_vehicle_id']),
+      new_pickup_location: getParameter(parameters, ['new_pickup_location']),
+      new_return_location: getParameter(parameters, ['new_return_location']),
+      new_special_requests: getParameter(parameters, ['new_special_requests'])
+    };
+  }
+  
+  else if (action === 'cancel_booking') {
+    response.requestType = "booking_cancellation";
+    response.cancellationData = {
+      booking_reference: getParameter(parameters, ['booking_reference']),
+      customer_name: getParameter(parameters, ['customer_name']),
+      phone: getParameter(parameters, ['phone']),
+      cancellation_reason: getParameter(parameters, ['cancellation_reason'])
+    };
+  }
+  
+  // Handle unknown actions
+  else {
+    response.requestType = "unknown";
+    response.message = "I can help you with vehicle rentals. Available actions: get_available_vehicles, calculate_rental_price, create_booking, get_booking_details, check_vehicle_availability.";
+  }
+  
+  response.success = true;
+  response.originalData = body;
+  
+} catch (error) {
+  console.error('Processing error:', error);
+  response.success = false;
+  response.error = error.message;
+  response.message = "Error processing your request. Please try again.";
+}
+
+return { json: response };
