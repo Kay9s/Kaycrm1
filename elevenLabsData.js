@@ -40,10 +40,10 @@ BOOKING CREATION:
 CONVERSATION EXAMPLES:
 
 User: "I need a car"
-Agent: "What type? *static*"
+Agent: "What type? "
 
 User: "SUV please"
-Agent: "Checking SUVs... *crackle*"
+Agent: "Checking SUVs..."
 [Send: {"action": "get_vehicles", "category": "SUV"}]
 
 User: "Toyota Camry"  
@@ -53,7 +53,7 @@ Agent: "Searching 2024 Camry..."
 [Send: {"action": "get_vehicles", "make": "Toyota", "model": "Camry", "year": 2024}]
 
 User: "Book it"
-Agent: "Your name? *faint*"
+Agent: "Your name? "
 User: "John Smith"
 Agent: "Phone number?"
 User: "+1234567890"
@@ -61,7 +61,7 @@ Agent: "Pickup date?"
 User: "June 1st"
 Agent: "Return date?"
 User: "June 5th"
-Agent: "Booking now... *static*"
+Agent: "Booking now... "
 [Send booking data]
 
 DISTURBANCE PHRASES:
@@ -80,8 +80,7 @@ Booking: "Name please?"
 Confirm: "Booking done!"
 Error: "Try again?"
 
-PHONE SIMULATION:
-- Add *static*, *crackle*, *faint* 
+PHONE SIMULATION: 
 - Occasional "Hello? Hello?"
 - "Can you repeat?"
 - Slight delays: "Um... okay"
@@ -141,7 +140,7 @@ const voiceSettings = {
 const conversationExamples = [
   {
     user: "I need a car for the weekend",
-    agent: "What type car? *static*",
+    agent: "What type car? ,
     action: null
   },
   {
