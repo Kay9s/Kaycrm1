@@ -35,13 +35,20 @@ router.get('/auth/url', (req: Request, res: Response) => {
 // OAuth callback handler
 router.get('/auth/callback', async (req: Request, res: Response) => {
   try {
+    console.log('Google OAuth callback received');
+    console.log('Query params:', req.query);
+    
     const { code } = req.query;
     
     if (!code) {
+      console.log('No authorization code provided');
       return res.status(400).json({ error: 'No authorization code provided' });
     }
     
+    console.log('Processing authorization code...');
     const tokens = await googleService.handleCallback(code as string);
+    console.log('Tokens received successfully:', !!tokens);
+    
     res.redirect('/integrations?auth=success');
   } catch (error) {
     console.error('Error handling Google callback:', error);
