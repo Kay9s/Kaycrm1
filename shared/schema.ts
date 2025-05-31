@@ -102,6 +102,12 @@ export const bookings = pgTable("bookings", {
   hasPickupMeeting: boolean("has_pickup_meeting").default(false),
   pickupLocation: text("pickup_location"),
   specialRequests: text("special_requests"),
+  // Additional fields for n8n integration
+  customerName: text("customer_name"),
+  customerPhone: text("customer_phone"),
+  customerEmail: text("customer_email"),
+  vehicleMake: text("vehicle_make"),
+  vehicleModel: text("vehicle_model"),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
