@@ -2,10 +2,18 @@ import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
 // Initialize Google OAuth client with all required scopes
+const getRedirectUri = () => {
+  if (process.env.REPLIT_DOMAINS) {
+    const domain = process.env.REPLIT_DOMAINS.split(',')[0];
+    return `https://${domain}/api/google/auth/callback`;
+  }
+  return 'http://localhost:5000/api/google/auth/callback';
+};
+
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/google/callback`
+  getRedirectUri()
 );
 
 // Initialize Google API services
