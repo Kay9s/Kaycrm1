@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { Vehicle } from "@shared/schema";
 import { 
   Card, 
   CardContent, 
@@ -25,12 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Vehicle } from "@shared/schema";
 import { Search, Plus, Filter, Check, X, AlertTriangle, Car } from "lucide-react";
 import ExportToSheets from "@/components/ExportToSheets";
 import AddVehicleForm from "@/components/vehicles/AddVehicleForm";
 
 export default function Fleet() {
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -330,8 +332,21 @@ export default function Fleet() {
                         </div>
                         
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" className="flex-1">Details</Button>
-                          <Button size="sm" className="flex-1">Schedule</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => navigate(`/fleet/${vehicle.id}`)}
+                          >
+                            Details
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => navigate(`/fleet/${vehicle.id}`)}
+                          >
+                            Schedule
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
