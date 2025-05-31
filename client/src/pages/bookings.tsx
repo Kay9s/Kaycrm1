@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +31,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -47,7 +56,10 @@ import {
   FileText, 
   Filter, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  ChevronDown,
+  Download,
+  FileSpreadsheet
 } from "lucide-react";
 
 type BookingWithDetails = Booking & {
@@ -64,6 +76,7 @@ export default function Bookings() {
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const pageSize = 10;
+  const { toast } = useToast();
 
   // Check URL for new booking parameter
   const params = new URLSearchParams(location.split("?")[1]);
@@ -128,6 +141,77 @@ export default function Bookings() {
       setSortDirection("asc");
     }
     setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  // Export functionality
+  const handleExport = async (format: 'csv' | 'sheets') => {
+    if (format === 'csv') {
+      try {
+        // Create CSV data
+        const csvHeaders = ['Booking ID', 'Customer', 'Vehicle', 'Start Date', 'End Date', 'Status', 'Total Amount'];
+        const csvData = filteredBookings.map(booking => [
+          booking.bookingRef || 'N/A',
+          booking.customer?.fullName || booking.customerName || 'N/A',
+          `${booking.vehicle?.make || 'N/A'} ${booking.vehicle?.model || ''}`,
+          booking.startDate ? format(new Date(booking.startDate), 'MMM dd, yyyy') : 'N/A',
+          booking.endDate ? format(new Date(booking.endDate), 'MMM dd, yyyy') : 'N/A',
+          booking.status || 'N/A',
+          booking.totalAmount ? `$${booking.totalAmount}` : 'N/A'
+        ]);
+
+        const csvContent = [csvHeaders, ...csvData]
+          .map(row => row.map(cell => `"${cell}"`).join(','))
+          .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bookings-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        toast({
+          title: "Export Successful",
+          description: "Bookings exported to CSV file",
+        });
+      } catch (error) {
+        toast({
+          title: "Export Failed",
+          description: "Failed to export bookings to CSV",
+          variant: "destructive",
+        });
+      }
+    } else if (format === 'sheets') {
+      try {
+        const bookingData = filteredBookings.map(booking => ({
+          bookingRef: booking.bookingRef || '',
+          customer: booking.customer?.fullName || booking.customerName || '',
+          vehicle: `${booking.vehicle?.make || ''} ${booking.vehicle?.model || ''}`,
+          startDate: booking.startDate || '',
+          endDate: booking.endDate || '',
+          status: booking.status || '',
+          totalAmount: booking.totalAmount || 0
+        }));
+
+        const response = await apiRequest('/api/google/sheets/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: bookingData })
+        });
+
+        toast({
+          title: "Export Successful",
+          description: "Bookings exported to Google Sheets",
+        });
+      } catch (error) {
+        toast({
+          title: "Export Failed",
+          description: "Failed to export to Google Sheets. Please check your Google authentication.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   // Filter and sort bookings
@@ -353,10 +437,30 @@ export default function Bookings() {
                 </SelectContent>
               </Select>
               
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Actions
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setShowNewBookingDialog(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Booking
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleExport('csv')}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('sheets')}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Export to Google Sheets
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
