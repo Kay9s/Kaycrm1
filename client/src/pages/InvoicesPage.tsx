@@ -307,8 +307,20 @@ export default function InvoicesPage() {
   // Generate PDF function
   const generatePDF = async (invoice: Invoice) => {
     try {
-      const jsPDF = (await import('jspdf')).default;
-      const html2canvas = (await import('html2canvas')).default;
+      // Show loading toast
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we prepare your invoice PDF...",
+      });
+
+      // Dynamic imports with better error handling
+      const [jsPDFModule, html2canvasModule] = await Promise.all([
+        import('jspdf'),
+        import('html2canvas')
+      ]);
+      
+      const jsPDF = jsPDFModule.default;
+      const html2canvas = html2canvasModule.default;
       
       // Create a temporary container for the invoice preview
       const container = document.createElement('div');
@@ -418,30 +430,45 @@ export default function InvoicesPage() {
         description: "Please wait while we prepare your invoice PDF...",
       });
       
-      // Create canvas from the container
+      // Wait a moment for content to render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Create canvas from the container with improved options
       const canvas = await html2canvas(container, {
-        scale: 2,
+        scale: 1.5,
         logging: false,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        width: 800,
+        height: container.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
       });
       
       // Remove the temporary container
       document.body.removeChild(container);
       
       // Create PDF from canvas
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 0.95);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
       
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      // Calculate dimensions to fit the page
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Check if image height exceeds page height
+      if (imgHeight > pdfHeight - 20) {
+        // Scale down to fit the page
+        const scaledHeight = pdfHeight - 20;
+        const scaledWidth = (canvas.width * scaledHeight) / canvas.height;
+        pdf.addImage(imgData, 'PNG', (pdfWidth - scaledWidth) / 2, 10, scaledWidth, scaledHeight);
+      } else {
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      }
+      
       pdf.save(`invoice-${invoice.invoiceNumber}.pdf`);
       
       toast({
@@ -450,13 +477,53 @@ export default function InvoicesPage() {
       });
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast({
-        title: "PDF Generation Failed",
-        description: "There was an error generating the PDF. Please try again.",
-        variant: "destructive"
-      });
+      
+      // Clean up if container exists
+      const existingContainer = document.querySelector('[data-pdf-container]');
+      if (existingContainer) {
+        document.body.removeChild(existingContainer);
+      }
+      
+      // Try simple PDF generation method
+      try {
+        const jsPDFModule = await import('jspdf');
+        const jsPDF = jsPDFModule.default;
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        let yPos = 20;
+        
+        pdf.setFontSize(20);
+        pdf.text('INVOICE', 105, yPos, { align: 'center' });
+        yPos += 20;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Invoice Number: ${invoice.invoiceNumber}`, 20, yPos);
+        yPos += 10;
+        pdf.text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`, 20, yPos);
+        yPos += 10;
+        pdf.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 20, yPos);
+        yPos += 20;
+        
+        pdf.text(`Total Amount: $${invoice.total.toFixed(2)}`, 20, yPos);
+        
+        pdf.save(`invoice-${invoice.invoiceNumber}.pdf`);
+        
+        toast({
+          title: "PDF Downloaded",
+          description: `Invoice ${invoice.invoiceNumber} has been downloaded successfully.`,
+        });
+      } catch (fallbackError) {
+        console.error('Simple PDF generation error:', fallbackError);
+        toast({
+          title: "PDF Generation Failed",
+          description: "Unable to generate PDF. Your browser may not support this feature.",
+          variant: "destructive"
+        });
+      }
     }
   };
+
+
   
   // Handle form submission
   const onSubmit = async (data: InvoiceFormValues) => {
