@@ -1,6 +1,6 @@
--- EXACT CONFIGURATION FOR YOUR N8N POSTGRESQL NODE --
+-- CORRECTED N8N POSTGRESQL NODE CONFIGURATION --
 
-1. In your PostgreSQL node, replace the Query with this EXACT text:
+1. Replace your Query with this EXACT text (copy and paste):
 
 INSERT INTO bookings (
   customer_name,
@@ -12,10 +12,12 @@ INSERT INTO bookings (
   special_requests,
   booking_ref,
   status,
-  source
+  source,
+  customer_id,
+  vehicle_id
 ) 
 VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, 'confirmed', 'n8n_voice'
+  $1, $2, $3, $4, $5, $6, $7, $8, 'confirmed', 'n8n_voice', 1, 1
 )
 RETURNING 
   id,
@@ -28,7 +30,7 @@ RETURNING
   end_date,
   status
 
-2. In the Parameters section, add these 8 parameters exactly:
+2. Parameters (use these exact expressions):
 
 Parameter 1: {{ $json.full_name }}
 Parameter 2: {{ $json.phone }}
@@ -39,5 +41,8 @@ Parameter 6: {{ $json.end_date }}
 Parameter 7: {{ $json.special_requests }}
 Parameter 8: {{ $json.booking_id }}
 
-3. Make sure "Consider using query parameters" is ENABLED
-4. Set Operation to "Execute Query"
+IMPORTANT NOTES:
+- Use "customer_phone" NOT "phone"
+- Use "status" NOT "booking_status"  
+- Use "booking_ref" NOT "booking_reference"
+- Make sure "Consider using query parameters" is ENABLED
