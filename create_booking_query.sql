@@ -1,10 +1,9 @@
--- n8n Booking Creation Query
--- Use this in your PostgreSQL node for creating bookings
+-- n8n Booking Creation Query - COPY THIS EXACT QUERY TO YOUR POSTGRESQL NODE
+-- Replace your current query with this one
 
 INSERT INTO bookings (
   customer_name,
   customer_phone,
-  customer_email,
   vehicle_make,
   vehicle_model,
   start_date,
@@ -12,26 +11,19 @@ INSERT INTO bookings (
   special_requests,
   booking_ref,
   status,
-  source,
-  customer_id,
-  vehicle_id,
-  created_at
+  source
 ) 
 VALUES (
-  $1,  -- customer_name
-  $2,  -- customer_phone
-  $3,  -- customer_email
-  $4,  -- vehicle_make
-  $5,  -- vehicle_model
-  $6,  -- start_date
-  $7,  -- end_date
-  $8,  -- special_requests
-  $9,  -- booking_ref
+  $1,  -- customer_name (from {{ $json.full_name }})
+  $2,  -- customer_phone (from {{ $json.phone }})
+  $3,  -- vehicle_make (from {{ $json.vehicle_make }})
+  $4,  -- vehicle_model (from {{ $json.vehicle_model }})
+  $5,  -- start_date (from {{ $json.start_date }})
+  $6,  -- end_date (from {{ $json.end_date }})
+  $7,  -- special_requests (from {{ $json.special_requests }})
+  $8,  -- booking_ref (from {{ $json.booking_id }})
   'confirmed',  -- status
-  'n8n_voice',  -- source
-  1,   -- customer_id (default)
-  1,   -- vehicle_id (default)
-  NOW()  -- created_at
+  'n8n_voice'   -- source
 )
 RETURNING 
   id,
@@ -42,5 +34,4 @@ RETURNING
   vehicle_model,
   start_date,
   end_date,
-  status,
-  created_at;
+  status;
