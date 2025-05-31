@@ -51,6 +51,8 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const pageSize = 10;
   
   // Fetch customers
@@ -83,7 +85,18 @@ export default function Customers() {
     return bookings.filter((booking: Booking) => booking.customerId === customerId).length;
   };
   
-  // Filter customers based on search query
+  // Sorting function
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Filter and sort customers based on search query
   const filteredCustomers = customers?.filter((customer: Customer) => {
     const searchLower = searchQuery.toLowerCase();
     return (
@@ -92,6 +105,39 @@ export default function Customers() {
       customer.phone.toLowerCase().includes(searchLower) ||
       (customer.driverLicense && customer.driverLicense.toLowerCase().includes(searchLower))
     );
+  }).sort((a: Customer, b: Customer) => {
+    if (!sortField) return 0;
+    
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'name':
+        aValue = a.fullName.toLowerCase();
+        bValue = b.fullName.toLowerCase();
+        break;
+      case 'email':
+        aValue = a.email.toLowerCase();
+        bValue = b.email.toLowerCase();
+        break;
+      case 'phone':
+        aValue = a.phone || '';
+        bValue = b.phone || '';
+        break;
+      case 'license':
+        aValue = a.driverLicense || '';
+        bValue = b.driverLicense || '';
+        break;
+      case 'bookings':
+        aValue = getBookingsCount(a.id);
+        bValue = getBookingsCount(b.id);
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   }) || [];
   
   // Pagination
@@ -269,22 +315,41 @@ export default function Customers() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[300px]">
-                    <div className="flex items-center">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                      onClick={() => handleSort('name')}
+                    >
                       Customer
-                      <ArrowUpDown className="ml-1 h-3 w-3" />
+                      <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'name' ? 'text-blue-500' : ''}`} />
                     </div>
                   </TableHead>
                   <TableHead>
-                    <div className="flex items-center">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                      onClick={() => handleSort('email')}
+                    >
                       Contact
+                      <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'email' ? 'text-blue-500' : ''}`} />
                     </div>
                   </TableHead>
                   <TableHead>
-                    <div className="flex items-center">
+                    <div 
+                      className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                      onClick={() => handleSort('license')}
+                    >
                       Driver License
+                      <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'license' ? 'text-blue-500' : ''}`} />
                     </div>
                   </TableHead>
-                  <TableHead className="text-right">Bookings</TableHead>
+                  <TableHead className="text-right">
+                    <div 
+                      className="flex items-center justify-end cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                      onClick={() => handleSort('bookings')}
+                    >
+                      Bookings
+                      <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'bookings' ? 'text-blue-500' : ''}`} />
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>

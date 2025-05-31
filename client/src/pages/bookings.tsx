@@ -61,6 +61,8 @@ export default function Bookings() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const pageSize = 10;
 
   // Check URL for new booking parameter
@@ -117,7 +119,18 @@ export default function Bookings() {
     };
   }) || [];
 
-  // Filter bookings
+  // Sorting function
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  // Filter and sort bookings
   const filteredBookings = processedBookings.filter((booking: BookingWithDetails) => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
@@ -130,6 +143,51 @@ export default function Bookings() {
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
     
     return matchesSearch && matchesStatus;
+  }).sort((a: BookingWithDetails, b: BookingWithDetails) => {
+    if (!sortField) return 0;
+    
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'id':
+        aValue = a.id;
+        bValue = b.id;
+        break;
+      case 'bookingRef':
+        aValue = a.bookingRef || '';
+        bValue = b.bookingRef || '';
+        break;
+      case 'customer':
+        aValue = a.customer?.fullName || a.customerName || '';
+        bValue = b.customer?.fullName || b.customerName || '';
+        break;
+      case 'vehicle':
+        aValue = `${a.vehicle?.make || a.vehicleMake || ''} ${a.vehicle?.model || a.vehicleModel || ''}`;
+        bValue = `${b.vehicle?.make || b.vehicleMake || ''} ${b.vehicle?.model || b.vehicleModel || ''}`;
+        break;
+      case 'startDate':
+        aValue = new Date(a.startDate || 0);
+        bValue = new Date(b.startDate || 0);
+        break;
+      case 'endDate':
+        aValue = new Date(a.endDate || 0);
+        bValue = new Date(b.endDate || 0);
+        break;
+      case 'status':
+        aValue = a.status || '';
+        bValue = b.status || '';
+        break;
+      case 'totalAmount':
+        aValue = a.totalAmount || 0;
+        bValue = b.totalAmount || 0;
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   });
 
   // Pagination
@@ -308,36 +366,59 @@ export default function Bookings() {
                 <thead>
                   <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('id')}
+                      >
                         Booking ID
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'id' ? 'text-blue-500' : ''}`} />
                       </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('customer')}
+                      >
                         Customer
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'customer' ? 'text-blue-500' : ''}`} />
                       </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('vehicle')}
+                      >
                         Vehicle
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'vehicle' ? 'text-blue-500' : ''}`} />
                       </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('startDate')}
+                      >
                         Pickup Date
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'startDate' ? 'text-blue-500' : ''}`} />
                       </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                      <div className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('endDate')}
+                      >
                         Return Date
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'endDate' ? 'text-blue-500' : ''}`} />
                       </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <div 
+                        className="flex items-center cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-200"
+                        onClick={() => handleSort('status')}
+                      >
+                        Status
+                        <ArrowUpDown className={`ml-1 h-3 w-3 ${sortField === 'status' ? 'text-blue-500' : ''}`} />
+                      </div>
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
