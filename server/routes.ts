@@ -386,6 +386,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Report Tables routes
+  app.get('/api/reports/tables', async (req, res) => {
+    try {
+      const tables = await storage.getReportTables();
+      res.json(tables);
+    } catch (error) {
+      console.error('Error fetching report tables:', error);
+      res.status(500).json({ message: 'Failed to fetch report tables' });
+    }
+  });
+
+  app.post('/api/reports/tables', async (req, res) => {
+    try {
+      const tableData = req.body;
+      const table = await storage.createReportTable(tableData);
+      res.status(201).json(table);
+    } catch (error) {
+      console.error('Error creating report table:', error);
+      res.status(500).json({ message: 'Failed to create report table' });
+    }
+  });
+
+  app.get('/api/reports/tables/:id/data', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const data = await storage.getReportTableData(id);
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching report table data:', error);
+      res.status(500).json({ message: 'Failed to fetch report table data' });
+    }
+  });
+
+  app.delete('/api/reports/tables/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteReportTable(id);
+      if (success) {
+        res.json({ message: 'Report table deleted successfully' });
+      } else {
+        res.status(404).json({ message: 'Report table not found' });
+      }
+    } catch (error) {
+      console.error('Error deleting report table:', error);
+      res.status(500).json({ message: 'Failed to delete report table' });
+    }
+  });
+
+  app.get('/api/reports/tables/:id/export', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const table = await storage.getReportTable(id);
+      const data = await storage.getReportTableData(id);
+      
+      if (!table || !data) {
+        return res.status(404).json({ message: 'Report table not found' });
+      }
+
+      // Generate CSV
+      const columns = table.columns as string[];
+      const csvHeader = columns.join(',');
+      const csvRows = data.map(row => 
+        columns.map(col => `"${row[col] || ''}"`).join(',')
+      );
+      const csv = [csvHeader, ...csvRows].join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${table.name}.csv"`);
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting report table:', error);
+      res.status(500).json({ message: 'Failed to export report table' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

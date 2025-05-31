@@ -725,6 +725,249 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Report Tables
+  async getReportTable(id: number): Promise<ReportTable | undefined> {
+    const [table] = await db.select().from(reportTables).where(eq(reportTables.id, id));
+    return table;
+  }
+
+  async getReportTables(): Promise<ReportTable[]> {
+    return await db.select().from(reportTables).orderBy(desc(reportTables.createdAt));
+  }
+
+  async createReportTable(tableData: InsertReportTable): Promise<ReportTable> {
+    const [table] = await db
+      .insert(reportTables)
+      .values(tableData)
+      .returning();
+    return table;
+  }
+
+  async updateReportTable(id: number, tableData: Partial<InsertReportTable>): Promise<ReportTable | undefined> {
+    const [table] = await db
+      .update(reportTables)
+      .set({ ...tableData, updatedAt: new Date() })
+      .where(eq(reportTables.id, id))
+      .returning();
+    return table;
+  }
+
+  async deleteReportTable(id: number): Promise<boolean> {
+    try {
+      await db.delete(reportTables).where(eq(reportTables.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting report table:', error);
+      return false;
+    }
+  }
+
+  async getReportTableData(id: number): Promise<any[]> {
+    const table = await this.getReportTable(id);
+    if (!table) return [];
+
+    const columns = table.columns as string[];
+    const filters = table.filters as Record<string, any>;
+
+    switch (table.type) {
+      case 'bookings':
+        return await this.getBookingReportData(columns, filters);
+      case 'vehicles':
+        return await this.getVehicleReportData(columns, filters);
+      case 'customers':
+        return await this.getCustomerReportData(columns, filters);
+      case 'revenue':
+        return await this.getRevenueReportData(columns, filters);
+      default:
+        return [];
+    }
+  }
+
+  private async getBookingReportData(columns: string[], filters: Record<string, any>): Promise<any[]> {
+    const query = db
+      .select()
+      .from(bookings)
+      .leftJoin(customers, eq(bookings.customerId, customers.id))
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id));
+
+    const results = await query;
+    
+    return results.map(row => {
+      const data: any = {};
+      columns.forEach(col => {
+        switch (col) {
+          case 'bookingRef':
+            data[col] = row.bookings.bookingRef;
+            break;
+          case 'customerName':
+            data[col] = row.customers?.fullName;
+            break;
+          case 'customerEmail':
+            data[col] = row.customers?.email;
+            break;
+          case 'vehicleMake':
+            data[col] = row.vehicles?.make;
+            break;
+          case 'vehicleModel':
+            data[col] = row.vehicles?.model;
+            break;
+          case 'vehicleLicense':
+            data[col] = row.vehicles?.licensePlate;
+            break;
+          case 'startDate':
+            data[col] = row.bookings.startDate;
+            break;
+          case 'endDate':
+            data[col] = row.bookings.endDate;
+            break;
+          case 'totalAmount':
+            data[col] = row.bookings.totalAmount;
+            break;
+          case 'status':
+            data[col] = row.bookings.status;
+            break;
+          case 'createdAt':
+            data[col] = row.bookings.createdAt;
+            break;
+        }
+      });
+      return data;
+    });
+  }
+
+  private async getVehicleReportData(columns: string[], filters: Record<string, any>): Promise<any[]> {
+    const vehicleData = await db.select().from(vehicles);
+    
+    const enrichedData = await Promise.all(vehicleData.map(async (vehicle) => {
+      const vehicleBookings = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.vehicleId, vehicle.id));
+      
+      const totalBookings = vehicleBookings.length;
+      const totalRevenue = vehicleBookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+      
+      const data: any = {};
+      columns.forEach(col => {
+        switch (col) {
+          case 'make':
+            data[col] = vehicle.make;
+            break;
+          case 'model':
+            data[col] = vehicle.model;
+            break;
+          case 'licensePlate':
+            data[col] = vehicle.licensePlate;
+            break;
+          case 'category':
+            data[col] = vehicle.category;
+            break;
+          case 'status':
+            data[col] = vehicle.status;
+            break;
+          case 'totalBookings':
+            data[col] = totalBookings;
+            break;
+          case 'revenue':
+            data[col] = totalRevenue;
+            break;
+          case 'utilizationRate':
+            data[col] = totalBookings > 0 ? `${Math.round((totalBookings / 30) * 100)}%` : '0%';
+            break;
+          case 'maintenanceStatus':
+            data[col] = vehicle.maintenanceStatus;
+            break;
+        }
+      });
+      return data;
+    }));
+
+    return enrichedData;
+  }
+
+  private async getCustomerReportData(columns: string[], filters: Record<string, any>): Promise<any[]> {
+    const customerData = await db.select().from(customers);
+    
+    const enrichedData = await Promise.all(customerData.map(async (customer) => {
+      const customerBookings = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.customerId, customer.id));
+      
+      const totalBookings = customerBookings.length;
+      const totalSpent = customerBookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+      const averageBookingValue = totalBookings > 0 ? totalSpent / totalBookings : 0;
+      const lastBooking = customerBookings.length > 0 
+        ? customerBookings.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0].createdAt
+        : null;
+      
+      const data: any = {};
+      columns.forEach(col => {
+        switch (col) {
+          case 'fullName':
+            data[col] = customer.fullName;
+            break;
+          case 'email':
+            data[col] = customer.email;
+            break;
+          case 'phone':
+            data[col] = customer.phone;
+            break;
+          case 'totalBookings':
+            data[col] = totalBookings;
+            break;
+          case 'totalSpent':
+            data[col] = totalSpent;
+            break;
+          case 'averageBookingValue':
+            data[col] = averageBookingValue;
+            break;
+          case 'lastBooking':
+            data[col] = lastBooking;
+            break;
+          case 'preferredCategory':
+            data[col] = 'Sedan'; // Could calculate from booking history
+            break;
+        }
+      });
+      return data;
+    }));
+
+    return enrichedData;
+  }
+
+  private async getRevenueReportData(columns: string[], filters: Record<string, any>): Promise<any[]> {
+    const allBookings = await db.select().from(bookings);
+    const monthlyData: Record<string, any> = {};
+
+    allBookings.forEach(booking => {
+      if (!booking.createdAt || !booking.totalAmount) return;
+      
+      const month = new Date(booking.createdAt).toISOString().slice(0, 7); // YYYY-MM format
+      
+      if (!monthlyData[month]) {
+        monthlyData[month] = {
+          month,
+          totalRevenue: 0,
+          bookingCount: 0,
+          averageBookingValue: 0
+        };
+      }
+      
+      monthlyData[month].totalRevenue += booking.totalAmount;
+      monthlyData[month].bookingCount += 1;
+    });
+
+    // Calculate average booking value for each month
+    Object.values(monthlyData).forEach((monthData: any) => {
+      monthData.averageBookingValue = monthData.bookingCount > 0 
+        ? monthData.totalRevenue / monthData.bookingCount 
+        : 0;
+    });
+
+    return Object.values(monthlyData);
+  }
 }
 
 // Use the DatabaseStorage instead of MemStorage

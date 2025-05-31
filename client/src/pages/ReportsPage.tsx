@@ -89,10 +89,12 @@ export default function ReportsPage() {
   // Create custom table mutation
   const createTableMutation = useMutation({
     mutationFn: async (tableData: any) => {
-      return await apiRequest('/api/reports/tables', {
+      const response = await fetch('/api/reports/tables', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tableData)
       });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports/tables'] });
@@ -117,9 +119,10 @@ export default function ReportsPage() {
   // Delete table mutation
   const deleteTableMutation = useMutation({
     mutationFn: async (tableId: number) => {
-      return await apiRequest(`/api/reports/tables/${tableId}`, {
+      const response = await fetch(`/api/reports/tables/${tableId}`, {
         method: 'DELETE'
       });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports/tables'] });
