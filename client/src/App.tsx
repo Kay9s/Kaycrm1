@@ -16,6 +16,7 @@ import Settings from "@/pages/settings";
 import InvoicesPage from "@/pages/InvoicesPage";
 import PickupMeetings from "@/pages/pickup-meetings";
 import N8nCalls from "@/pages/n8n-calls";
+import Integrations from "@/pages/integrations";
 import Login from "@/pages/login";
 import TestLogin from "@/pages/TestLogin";
 
@@ -109,6 +110,11 @@ function Router() {
       <Route path="/n8n-calls" component={() => (
         <AppLayout>
           <N8nCalls />
+        </AppLayout>
+      )} />
+      <Route path="/integrations" component={() => (
+        <AppLayout>
+          <Integrations />
         </AppLayout>
       )} />
       {/* Login page - no AppLayout */}

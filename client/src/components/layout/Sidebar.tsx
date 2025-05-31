@@ -114,6 +114,14 @@ export default function Sidebar() {
         <ul className="space-y-0.5">
           <li>
             <NavLink 
+              href="/integrations" 
+              icon="ri-links-line" 
+              label="Integrations" 
+              active={location === "/integrations"} 
+            />
+          </li>
+          <li>
+            <NavLink 
               href="/settings" 
               icon="ri-settings-line" 
               label="Settings" 

@@ -41,47 +41,34 @@ router.get('/auth/url', authenticate, requireAdmin, (req: Request, res: Response
 // OAuth callback handler
 router.get('/callback', async (req: Request, res: Response) => {
   try {
-    const { code, state } = req.query;
+    const { code } = req.query;
     
     if (!code) {
       return res.status(400).json({ error: 'No authorization code provided' });
     }
     
-    // State should indicate which service (calendar or sheets)
-    if (state === 'calendar') {
-      const tokens = await googleCalendarService.handleCallback(code as string);
-      res.json({ message: 'Google Calendar successfully authenticated', tokens });
-    } else if (state === 'sheets') {
-      const tokens = await googleSheetsService.handleCallback(code as string);
-      res.json({ message: 'Google Sheets successfully authenticated', tokens });
-    } else {
-      res.status(400).json({ error: 'Invalid state parameter' });
-    }
+    const tokens = await googleService.handleCallback(code as string);
+    res.json({ message: 'Google services successfully authenticated', tokens });
   } catch (error) {
     console.error('Error handling Google callback:', error);
     res.status(500).json({ error: 'Failed to authenticate with Google' });
   }
 });
 
-// Create a new Google Sheet for bookings export
-router.post('/sheets/bookings', authenticate, async (req: Request, res: Response) => {
+// Create a new Google Sheet for data export
+router.post('/sheets/create', authenticate, async (req: Request, res: Response) => {
   try {
-    const { title } = req.body;
+    const { title, data } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: 'Sheet title is required' });
     }
     
-    const spreadsheetId = await googleSheetsService.createBookingsSheet(title);
-    
-    if (!spreadsheetId) {
-      return res.status(500).json({ error: 'Failed to create Google Sheet' });
-    }
+    const result = await googleService.createReportSheet(title, data || []);
     
     res.json({ 
       message: 'Google Sheet created successfully', 
-      spreadsheetId,
-      url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+      ...result
     });
   } catch (error) {
     console.error('Error creating Google Sheet:', error);
@@ -89,33 +76,50 @@ router.post('/sheets/bookings', authenticate, async (req: Request, res: Response
   }
 });
 
-// Add bookings to a Google Sheet
-router.post('/sheets/bookings/:spreadsheetId', authenticate, async (req: Request, res: Response) => {
+// Create a Google Doc for reports
+router.post('/docs/create', authenticate, async (req: Request, res: Response) => {
   try {
-    const { spreadsheetId } = req.params;
-    const { bookings } = req.body;
+    const { title, content } = req.body;
     
-    if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
-      return res.status(400).json({ error: 'Bookings data is required' });
+    if (!title) {
+      return res.status(400).json({ error: 'Document title is required' });
     }
     
-    const success = await googleSheetsService.addBookingsToSheet(spreadsheetId, bookings);
-    
-    if (!success) {
-      return res.status(500).json({ error: 'Failed to add bookings to Google Sheet' });
-    }
+    const result = await googleService.createReportDocument(title, content || '');
     
     res.json({ 
-      message: 'Bookings added to Google Sheet successfully',
-      url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+      message: 'Google Document created successfully', 
+      ...result
     });
   } catch (error) {
-    console.error('Error adding bookings to Google Sheet:', error);
-    res.status(500).json({ error: 'Failed to add bookings to Google Sheet' });
+    console.error('Error creating Google Document:', error);
+    res.status(500).json({ error: 'Failed to create Google Document' });
   }
 });
 
-// Add a booking to Google Calendar
+// Sync bookings to Google Calendar
+router.post('/calendar/sync', authenticate, async (req: Request, res: Response) => {
+  try {
+    // Get all bookings
+    const bookings = await storage.getBookings();
+    
+    if (!bookings || bookings.length === 0) {
+      return res.json({ message: 'No bookings to sync', results: [] });
+    }
+    
+    const results = await googleService.syncCalendar(bookings);
+    
+    res.json({ 
+      message: `Calendar sync completed. ${results.filter(r => r.success).length} bookings synced successfully.`,
+      results
+    });
+  } catch (error) {
+    console.error('Error syncing calendar:', error);
+    res.status(500).json({ error: 'Failed to sync calendar' });
+  }
+});
+
+// Add a single booking to Google Calendar
 router.post('/calendar/booking', authenticate, async (req: Request, res: Response) => {
   try {
     const booking = req.body;
@@ -124,11 +128,7 @@ router.post('/calendar/booking', authenticate, async (req: Request, res: Respons
       return res.status(400).json({ error: 'Valid booking data is required' });
     }
     
-    const eventId = await googleCalendarService.addBookingToCalendar(booking);
-    
-    if (!eventId) {
-      return res.status(500).json({ error: 'Failed to add booking to Google Calendar' });
-    }
+    const eventId = await googleService.addBookingToCalendar(booking);
     
     res.json({ 
       message: 'Booking added to Google Calendar successfully',
