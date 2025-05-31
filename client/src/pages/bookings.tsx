@@ -119,10 +119,13 @@ export default function Bookings() {
 
   // Filter bookings
   const filteredBookings = processedBookings.filter((booking: BookingWithDetails) => {
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
-      booking.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.customer?.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${booking.vehicle?.make} ${booking.vehicle?.model}`.toLowerCase().includes(searchQuery.toLowerCase());
+      (booking.bookingRef?.toLowerCase() || '').includes(searchLower) ||
+      (booking.customer?.fullName?.toLowerCase() || '').includes(searchLower) ||
+      (booking.customerName?.toLowerCase() || '').includes(searchLower) ||
+      `${booking.vehicle?.make || ''} ${booking.vehicle?.model || ''}`.toLowerCase().includes(searchLower) ||
+      `${booking.vehicleMake || ''} ${booking.vehicleModel || ''}`.toLowerCase().includes(searchLower);
     
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
     
