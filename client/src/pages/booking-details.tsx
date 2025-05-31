@@ -199,6 +199,11 @@ export default function BookingDetails({ id }: BookingDetailsProps) {
       updateStatusMutation.mutate(newStatus);
     }
   };
+
+  // Handle print invoice
+  const handlePrintInvoice = () => {
+    window.print();
+  };
   
   // Handle emergency support submission
   const handleEmergencySupport = () => {
@@ -363,14 +368,14 @@ export default function BookingDetails({ id }: BookingDetailsProps) {
                   <Calendar className="h-5 w-5 text-neutral-400 dark:text-neutral-500 mr-2 mt-0.5" />
                   <div>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">Pickup Date</p>
-                    <p className="font-medium">{format(new Date(booking?.startDate), 'MMMM d, yyyy')}</p>
+                    <p className="font-medium">{booking?.startDate ? format(new Date(booking.startDate), 'MMMM d, yyyy') : 'N/A'}</p>
                   </div>
                 </div>
                 <div className="space-y-1 flex items-start">
                   <Calendar className="h-5 w-5 text-neutral-400 dark:text-neutral-500 mr-2 mt-0.5" />
                   <div>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">Return Date</p>
-                    <p className="font-medium">{format(new Date(booking?.endDate), 'MMMM d, yyyy')}</p>
+                    <p className="font-medium">{booking?.endDate ? format(new Date(booking.endDate), 'MMMM d, yyyy') : 'N/A'}</p>
                   </div>
                 </div>
                 <div className="space-y-1 flex items-start">
@@ -469,14 +474,14 @@ export default function BookingDetails({ id }: BookingDetailsProps) {
                           variant={ticket.priority === "high" ? "destructive" : 
                                   ticket.priority === "medium" ? "default" : "outline"}
                         >
-                          {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)} Priority
+                          {ticket.priority ? ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1) : 'Normal'} Priority
                         </Badge>
                       </div>
                       <p className="text-sm mb-3">{ticket.description}</p>
                       <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400">
-                        <span>Created on {format(new Date(ticket.createdAt), 'MMM d, yyyy h:mm a')}</span>
+                        <span>Created on {ticket.createdAt ? format(new Date(ticket.createdAt), 'MMM d, yyyy h:mm a') : 'Unknown'}</span>
                         <Badge variant={ticket.status === "open" ? "outline" : "secondary"}>
-                          {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                          {ticket.status ? ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1) : 'Unknown'}
                         </Badge>
                       </div>
                     </div>
