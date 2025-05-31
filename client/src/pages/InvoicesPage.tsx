@@ -34,6 +34,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   PlusCircle, 
   FileText, 
@@ -101,6 +111,8 @@ export default function InvoicesPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<number | null>(null);
   
   // Fetch invoices from database
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery<Invoice[]>({
@@ -253,10 +265,18 @@ export default function InvoicesPage() {
     setActiveTab("edit");
   };
   
+  // Handle opening delete confirmation dialog
+  const openDeleteDialog = (id: number) => {
+    setInvoiceToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
   // Handle deleting an invoice
-  const handleDeleteInvoice = async (id: number) => {
+  const handleDeleteInvoice = async () => {
+    if (!invoiceToDelete) return;
+    
     try {
-      const response = await fetch(`/api/invoices/${id}`, {
+      const response = await fetch(`/api/invoices/${invoiceToDelete}`, {
         method: 'DELETE',
       });
       
@@ -271,6 +291,9 @@ export default function InvoicesPage() {
         title: "Invoice deleted",
         description: "The invoice has been deleted successfully.",
       });
+      
+      setDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
     } catch (error) {
       console.error('Error deleting invoice:', error);
       toast({
@@ -629,7 +652,7 @@ export default function InvoicesPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleDeleteInvoice(invoice.id)}
+                                  onClick={() => openDeleteDialog(invoice.id)}
                                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                 >
                                   <Trash2 className="h-4 w-4" />
