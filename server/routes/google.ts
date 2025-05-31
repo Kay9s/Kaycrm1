@@ -5,30 +5,18 @@ import { storage } from '../storage';
 
 const router = Router();
 
-// Auth URLs for Google services
-// Test Google services connection
-router.get('/calendar/test', authenticate, requireAdmin, (req: Request, res: Response) => {
+// Google OAuth flow - these routes don't need authentication
+router.get('/auth', (req: Request, res: Response) => {
   try {
-    const isAuth = googleService.isAuthenticated();
-    if (!isAuth) {
-      const authUrl = googleService.getAuthUrl();
-      return res.json({ 
-        authenticated: false, 
-        message: 'Google services not authenticated. Please complete OAuth flow.',
-        authUrl 
-      });
-    }
-    res.json({ 
-      authenticated: true, 
-      message: 'Google services are authenticated and ready' 
-    });
+    const authUrl = googleService.getAuthUrl();
+    res.redirect(authUrl);
   } catch (error) {
-    console.error('Error testing Google connection:', error);
-    res.status(500).json({ error: 'Failed to test Google connection' });
+    console.error('Error starting Google auth:', error);
+    res.status(500).json({ error: 'Failed to start Google authentication' });
   }
 });
 
-router.get('/auth/url', authenticate, requireAdmin, (req: Request, res: Response) => {
+router.get('/auth/url', (req: Request, res: Response) => {
   try {
     const authUrl = googleService.getAuthUrl();
     res.json({ authUrl });
@@ -39,7 +27,7 @@ router.get('/auth/url', authenticate, requireAdmin, (req: Request, res: Response
 });
 
 // OAuth callback handler
-router.get('/callback', async (req: Request, res: Response) => {
+router.get('/auth/callback', async (req: Request, res: Response) => {
   try {
     const { code } = req.query;
     
@@ -48,10 +36,31 @@ router.get('/callback', async (req: Request, res: Response) => {
     }
     
     const tokens = await googleService.handleCallback(code as string);
-    res.json({ message: 'Google services successfully authenticated', tokens });
+    res.redirect('/integrations?auth=success');
   } catch (error) {
     console.error('Error handling Google callback:', error);
-    res.status(500).json({ error: 'Failed to authenticate with Google' });
+    res.redirect('/integrations?auth=error');
+  }
+});
+
+// Test Google services connection - needs authentication
+router.get('/calendar/test', authenticate, requireAdmin, (req: Request, res: Response) => {
+  try {
+    const isAuth = googleService.isAuthenticated();
+    if (!isAuth) {
+      return res.status(401).json({ 
+        error: 'Authentication required',
+        authenticated: false, 
+        message: 'Google services not authenticated. Please complete OAuth flow.'
+      });
+    }
+    res.json({ 
+      authenticated: true, 
+      message: 'Google services are authenticated and ready' 
+    });
+  } catch (error) {
+    console.error('Error testing Google connection:', error);
+    res.status(500).json({ error: 'Failed to test Google connection' });
   }
 });
 

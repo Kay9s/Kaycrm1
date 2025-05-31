@@ -35,23 +35,9 @@ export default function Integrations() {
   });
 
   // Authenticate with Google
-  const authenticateMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/google/auth/url');
-      const data = await response.json();
-      if (data.authUrl) {
-        window.location.href = data.authUrl;
-      }
-      return data;
-    },
-    onError: (error) => {
-      toast({
-        title: "Authentication Error",
-        description: "Failed to get authentication URL. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const handleConnectGoogle = () => {
+    window.location.href = "/api/google/auth";
+  };
 
   // Sync calendar
   const syncCalendarMutation = useMutation({
@@ -172,8 +158,7 @@ export default function Integrations() {
 
           {!isAuthenticated && (
             <Button 
-              onClick={() => authenticateMutation.mutate()}
-              disabled={authenticateMutation.isPending}
+              onClick={handleConnectGoogle}
               className="w-full sm:w-auto"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
