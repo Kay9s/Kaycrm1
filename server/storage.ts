@@ -6,7 +6,8 @@ import {
   supportTickets, type SupportTicket, type InsertSupportTicket,
   invoices, type Invoice, type InsertInvoice,
   n8nCalls, type N8nCall, type InsertN8nCall,
-  pricing, type Pricing, type InsertPricing
+  pricing, type Pricing, type InsertPricing,
+  reportTables, type ReportTable, type InsertReportTable
 } from "@shared/schema";
 import { db } from './db';
 import { eq, and, or, gte, lte, desc, isNull, sql } from 'drizzle-orm';
@@ -84,6 +85,14 @@ export interface IStorage {
   createPricing(pricing: InsertPricing): Promise<Pricing>;
   updatePricing(vehicleId: number, pricing: Partial<InsertPricing>): Promise<Pricing | undefined>;
   deletePricing(vehicleId: number): Promise<boolean>;
+  
+  // Report Tables
+  getReportTable(id: number): Promise<ReportTable | undefined>;
+  getReportTables(): Promise<ReportTable[]>;
+  createReportTable(table: InsertReportTable): Promise<ReportTable>;
+  updateReportTable(id: number, table: Partial<InsertReportTable>): Promise<ReportTable | undefined>;
+  deleteReportTable(id: number): Promise<boolean>;
+  getReportTableData(id: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {

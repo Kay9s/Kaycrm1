@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, date, json, numeric, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date, json, numeric, jsonb, decimal, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -244,3 +244,19 @@ export const insertN8nCallSchema = createInsertSchema(n8nCalls).omit({
 
 export type InsertN8nCall = z.infer<typeof insertN8nCallSchema>;
 export type N8nCall = typeof n8nCalls.$inferSelect;
+
+// Report Tables
+export const reportTables = pgTable("report_tables", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'bookings', 'vehicles', 'customers', 'revenue', 'custom'
+  columns: jsonb("columns").notNull(), // Array of column names
+  filters: jsonb("filters").default('{}'), // Object for filter conditions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertReportTableSchema = createInsertSchema(reportTables);
+
+export type InsertReportTable = z.infer<typeof insertReportTableSchema>;
+export type ReportTable = typeof reportTables.$inferSelect;
