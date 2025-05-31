@@ -461,6 +461,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Sheets - Create bookings spreadsheet
+  app.post('/api/google/sheets/bookings', async (req: Request, res: Response) => {
+    try {
+      const { data } = req.body;
+      
+      if (!data || !Array.isArray(data)) {
+        return res.status(400).json({ error: 'Invalid data format' });
+      }
+      
+      // Transform booking data for Google Sheets
+      const headers = ['Booking ID', 'Customer', 'Vehicle', 'Start Date', 'End Date', 'Status', 'Total Amount'];
+      const rows = data.map((booking: any) => [
+        booking.bookingRef || '',
+        booking.customer || '',
+        booking.vehicle || '',
+        booking.startDate || '',
+        booking.endDate || '',
+        booking.status || '',
+        booking.totalAmount || 0
+      ]);
+      
+      const sheetData = [headers, ...rows];
+      
+      // For now, return success response - Google Sheets integration requires proper OAuth setup
+      res.json({ 
+        message: 'Booking data prepared for Google Sheets export',
+        rows: sheetData.length - 1,
+        note: 'Google OAuth credentials required for actual sheet creation'
+      });
+    } catch (error) {
+      console.error('Error preparing bookings sheet:', error);
+      res.status(500).json({ error: 'Failed to prepare bookings sheet' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

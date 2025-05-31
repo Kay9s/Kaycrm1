@@ -167,7 +167,7 @@ export default function Bookings() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `bookings-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
 
@@ -194,10 +194,9 @@ export default function Bookings() {
           totalAmount: booking.totalAmount || 0
         }));
 
-        const response = await apiRequest('/api/google/sheets/bookings', {
+        await apiRequest('/api/google/sheets/bookings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: bookingData })
+          body: { data: bookingData }
         });
 
         toast({
