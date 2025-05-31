@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import Bookings from "@/pages/bookings";
 import BookingDetails from "@/pages/booking-details";
 import Fleet from "@/pages/fleet";
+import VehicleDetails from "@/pages/vehicle-details";
 import Customers from "@/pages/customers";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
@@ -73,6 +74,11 @@ function Router() {
       <Route path="/fleet" component={() => (
         <AppLayout>
           <Fleet />
+        </AppLayout>
+      )} />
+      <Route path="/fleet/:id" component={({ params }) => (
+        <AppLayout>
+          <VehicleDetails id={params.id} />
         </AppLayout>
       )} />
       <Route path="/customers" component={() => (

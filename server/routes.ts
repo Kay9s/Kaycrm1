@@ -117,6 +117,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       handleZodError(err, res);
     }
   });
+
+  // Update vehicle information
+  app.patch("/api/vehicles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateSchema = z.object({
+        status: z.string().optional(),
+        dailyRate: z.string().optional(),
+        maintenanceStatus: z.string().optional()
+      });
+      
+      const updateData = updateSchema.parse(req.body);
+      
+      // Convert dailyRate to number if provided
+      const processedData = {
+        ...updateData,
+        dailyRate: updateData.dailyRate ? parseFloat(updateData.dailyRate) : undefined
+      };
+      
+      const vehicle = await storage.updateVehicle(id, processedData);
+      if (!vehicle) {
+        return res.status(404).json({ error: "Vehicle not found" });
+      }
+      
+      res.json(vehicle);
+    } catch (err) {
+      handleZodError(err, res);
+    }
+  });
+
+  // Schedule vehicle maintenance
+  app.patch("/api/vehicles/:id/maintenance", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const maintenanceSchema = z.object({
+        maintenanceStatus: z.string(),
+        maintenanceType: z.string().optional(),
+        maintenanceDate: z.string().optional(),
+        maintenanceNotes: z.string().optional()
+      });
+      
+      const maintenanceData = maintenanceSchema.parse(req.body);
+      
+      const vehicle = await storage.scheduleVehicleMaintenance(id, maintenanceData);
+      if (!vehicle) {
+        return res.status(404).json({ error: "Vehicle not found" });
+      }
+      
+      res.json(vehicle);
+    } catch (err) {
+      handleZodError(err, res);
+    }
+  });
   
   // Customers
   app.get("/api/customers", async (req, res) => {

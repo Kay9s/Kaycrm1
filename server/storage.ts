@@ -25,6 +25,8 @@ export interface IStorage {
   getVehiclesByCategory(): Promise<Record<string, number>>;
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
   updateVehicleStatus(id: number, status: string): Promise<Vehicle | undefined>;
+  updateVehicle(id: number, data: Partial<Vehicle>): Promise<Vehicle | undefined>;
+  scheduleVehicleMaintenance(id: number, maintenanceData: any): Promise<Vehicle | undefined>;
   
   // Customers
   getCustomer(id: number): Promise<Customer | undefined>;
@@ -188,6 +190,26 @@ export class DatabaseStorage implements IStorage {
     const [vehicle] = await db
       .update(vehicles)
       .set({ status })
+      .where(eq(vehicles.id, id))
+      .returning();
+    return vehicle || undefined;
+  }
+
+  async updateVehicle(id: number, data: Partial<Vehicle>): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set(data)
+      .where(eq(vehicles.id, id))
+      .returning();
+    return vehicle || undefined;
+  }
+
+  async scheduleVehicleMaintenance(id: number, maintenanceData: any): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({
+        maintenanceStatus: maintenanceData.maintenanceStatus,
+      })
       .where(eq(vehicles.id, id))
       .returning();
     return vehicle || undefined;
