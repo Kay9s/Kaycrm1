@@ -35,10 +35,14 @@ export function getAuthUrl() {
     'https://www.googleapis.com/auth/drive.file'
   ];
 
+  const redirectUri = getRedirectUri();
+  console.log('Using redirect URI:', redirectUri);
+
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
     prompt: 'consent',
+    redirect_uri: redirectUri
   });
 }
 
