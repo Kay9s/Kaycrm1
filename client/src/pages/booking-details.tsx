@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Booking, Customer, Vehicle, SupportTicket } from "@shared/schema";
-import StatusChanger from "@/components/bookings/StatusChanger";
+import StatusChanger from "@/components/StatusChanger";
 import { 
   Card, 
   CardContent, 

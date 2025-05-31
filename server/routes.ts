@@ -306,6 +306,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Emergency support endpoint
+  app.post("/api/emergency-support", async (req, res) => {
+    try {
+      const emergencySchema = z.object({
+        customerId: z.number(),
+        subject: z.string(),
+        description: z.string(),
+        bookingId: z.number().optional()
+      });
+      
+      const data = emergencySchema.parse(req.body);
+      
+      const ticket = await storage.createSupportTicket({
+        customerId: data.customerId,
+        subject: data.subject,
+        description: data.description,
+        priority: "high",
+        status: "open",
+        bookingId: data.bookingId
+      });
+      
+      res.json(ticket);
+    } catch (err) {
+      handleZodError(err, res);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

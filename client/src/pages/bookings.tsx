@@ -367,13 +367,13 @@ export default function Bookings() {
                           {booking.vehicle ? `${booking.vehicle.make} ${booking.vehicle.model} (${booking.vehicle.year})` : "Unknown"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-300">
-                          {format(new Date(booking.startDate), 'MMM d, yyyy')}
+                          {booking.startDate ? format(new Date(booking.startDate), 'MMM d, yyyy') : 'N/A'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-300">
-                          {format(new Date(booking.endDate), 'MMM d, yyyy')}
+                          {booking.endDate ? format(new Date(booking.endDate), 'MMM d, yyyy') : 'N/A'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          {renderStatusBadge(booking.status)}
+                          {booking.status ? renderStatusBadge(booking.status) : <span className="text-neutral-500">Unknown</span>}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <div className="flex space-x-2">
