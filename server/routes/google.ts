@@ -9,7 +9,7 @@ const router = Router();
 router.get('/auth', (req: Request, res: Response) => {
   try {
     console.log('Starting Google OAuth flow...');
-    console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set');
+    console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
     console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set');
     console.log('REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
     
