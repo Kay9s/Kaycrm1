@@ -5,8 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  // This should be your redirect URL in a production environment
-  'http://localhost:5000/api/google/callback'
+  `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/google/callback`
 );
 
 // Set up the Calendar API service
@@ -173,11 +172,15 @@ export function getAuthUrl() {
   const scopes = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/documents'
   ];
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
+    state: 'calendar',
     prompt: 'consent', // Forces to approve the consent screen
   });
 }

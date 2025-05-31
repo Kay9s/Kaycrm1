@@ -1,28 +1,40 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth';
-import * as googleCalendarService from '../services/googleCalendar';
-import * as googleSheetsService from '../services/googleSheets';
+import * as googleService from '../services/googleService';
+import { storage } from '../storage';
 
 const router = Router();
 
 // Auth URLs for Google services
-router.get('/auth/calendar/url', authenticate, requireAdmin, (req: Request, res: Response) => {
+// Test Google services connection
+router.get('/calendar/test', authenticate, requireAdmin, (req: Request, res: Response) => {
   try {
-    const authUrl = googleCalendarService.getAuthUrl();
-    res.json({ authUrl });
+    const isAuth = googleService.isAuthenticated();
+    if (!isAuth) {
+      const authUrl = googleService.getAuthUrl();
+      return res.json({ 
+        authenticated: false, 
+        message: 'Google services not authenticated. Please complete OAuth flow.',
+        authUrl 
+      });
+    }
+    res.json({ 
+      authenticated: true, 
+      message: 'Google services are authenticated and ready' 
+    });
   } catch (error) {
-    console.error('Error getting Calendar auth URL:', error);
-    res.status(500).json({ error: 'Failed to get Calendar auth URL' });
+    console.error('Error testing Google connection:', error);
+    res.status(500).json({ error: 'Failed to test Google connection' });
   }
 });
 
-router.get('/auth/sheets/url', authenticate, requireAdmin, (req: Request, res: Response) => {
+router.get('/auth/url', authenticate, requireAdmin, (req: Request, res: Response) => {
   try {
-    const authUrl = googleSheetsService.getAuthUrl();
+    const authUrl = googleService.getAuthUrl();
     res.json({ authUrl });
   } catch (error) {
-    console.error('Error getting Sheets auth URL:', error);
-    res.status(500).json({ error: 'Failed to get Sheets auth URL' });
+    console.error('Error getting Google auth URL:', error);
+    res.status(500).json({ error: 'Failed to get Google auth URL' });
   }
 });
 
