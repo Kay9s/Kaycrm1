@@ -1,5 +1,9 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const TOKENS_FILE = path.join(process.cwd(), 'google-tokens.json');
 
 // Initialize Google OAuth client with all required scopes
 const getRedirectUri = () => {
@@ -15,6 +19,33 @@ const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_SECRET,
   getRedirectUri()
 );
+
+// Load existing tokens on startup
+async function loadStoredTokens() {
+  try {
+    const tokenData = await fs.readFile(TOKENS_FILE, 'utf8');
+    const tokens = JSON.parse(tokenData);
+    oauth2Client.setCredentials(tokens);
+    console.log('Loaded stored Google tokens');
+    return true;
+  } catch (error) {
+    console.log('No stored Google tokens found');
+    return false;
+  }
+}
+
+// Save tokens to file
+async function saveTokens(tokens: any) {
+  try {
+    await fs.writeFile(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+    console.log('Google tokens saved to file');
+  } catch (error) {
+    console.error('Error saving Google tokens:', error);
+  }
+}
+
+// Load tokens on module initialization
+loadStoredTokens();
 
 // Initialize Google API services
 const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
@@ -53,6 +84,8 @@ export async function handleCallback(code: string) {
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
+    await saveTokens(tokens);
+    console.log('Google authentication completed and tokens saved');
     return tokens;
   } catch (error) {
     console.error('Error handling Google OAuth callback:', error);
