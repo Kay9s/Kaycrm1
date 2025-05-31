@@ -153,8 +153,8 @@ export default function Bookings() {
           booking.bookingRef || 'N/A',
           booking.customer?.fullName || booking.customerName || 'N/A',
           `${booking.vehicle?.make || 'N/A'} ${booking.vehicle?.model || ''}`,
-          booking.startDate ? format(new Date(booking.startDate), 'MMM dd, yyyy') : 'N/A',
-          booking.endDate ? format(new Date(booking.endDate), 'MMM dd, yyyy') : 'N/A',
+          booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A',
+          booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A',
           booking.status || 'N/A',
           booking.totalAmount ? `$${booking.totalAmount}` : 'N/A'
         ]);
