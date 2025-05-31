@@ -194,10 +194,12 @@ export default function Bookings() {
           totalAmount: booking.totalAmount || 0
         }));
 
-        await apiRequest('/api/google/sheets/bookings', {
+        const response = await fetch('/api/google/sheets/bookings', {
           method: 'POST',
-          body: { data: bookingData }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: bookingData })
         });
+        const result = await response.json();
 
         toast({
           title: "Export Successful",

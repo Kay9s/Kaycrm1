@@ -37,11 +37,12 @@ export default function Integrations() {
   // Authenticate with Google
   const authenticateMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/google/auth/url');
-      if (response.authUrl) {
-        window.location.href = response.authUrl;
+      const response = await fetch('/api/google/auth/url');
+      const data = await response.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
       }
-      return response;
+      return data;
     },
     onError: (error) => {
       toast({
@@ -54,7 +55,10 @@ export default function Integrations() {
 
   // Sync calendar
   const syncCalendarMutation = useMutation({
-    mutationFn: () => apiRequest('/api/google/calendar/sync', { method: 'POST' }),
+    mutationFn: async () => {
+      const response = await fetch('/api/google/calendar/sync', { method: 'POST' });
+      return await response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: "Calendar Sync Successful",
@@ -73,12 +77,14 @@ export default function Integrations() {
 
   // Create Google Sheet
   const createSheetMutation = useMutation({
-    mutationFn: (data: { title: string; data: any[] }) => 
-      apiRequest('/api/google/sheets/create', { 
+    mutationFn: async (data: { title: string; data: any[] }) => {
+      const response = await fetch('/api/google/sheets/create', { 
         method: 'POST', 
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: "Sheet Created",
@@ -97,12 +103,14 @@ export default function Integrations() {
 
   // Create Google Doc
   const createDocMutation = useMutation({
-    mutationFn: (data: { title: string; content: string }) => 
-      apiRequest('/api/google/docs/create', { 
+    mutationFn: async (data: { title: string; content: string }) => {
+      const response = await fetch('/api/google/docs/create', { 
         method: 'POST', 
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: "Document Created",
@@ -120,7 +128,7 @@ export default function Integrations() {
     },
   });
 
-  const isAuthenticated = authStatus?.authenticated;
+  const isAuthenticated = authStatus && typeof authStatus === 'object' && 'authenticated' in authStatus ? authStatus.authenticated : false;
 
   return (
     <div className="space-y-6">
